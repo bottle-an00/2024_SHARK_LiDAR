@@ -1,0 +1,8 @@
+prefix=/home/jba/2024_SHARK_LiDAR/devel
+
+Name: LiDAR_perception
+Description: Description of LiDAR_perception
+Version: 0.0.0
+Cflags: -I/home/jba/2024_SHARK_LiDAR/src/LiDAR_perception/include
+Libs: -L${prefix}/lib -lLiDAR_perception
+Requires: roscpp rospy std_msgs

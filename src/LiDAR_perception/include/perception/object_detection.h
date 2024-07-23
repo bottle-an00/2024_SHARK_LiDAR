@@ -236,14 +236,13 @@ public:
         size_t cloud_size = nongroundCloudIn->points.size();
 
         for(int i = 0; i < cloud_size; i++){
-            nongroundCloudIn->points[i].x -= 0.4;
-            ConeCloud->push_back(nongroundCloudIn->points[i]);
+            nongroundCloudIn->points[i].x -= 0.4;//gps와의 match를 위한 필수 조건
             
-            // Point p = {nongroundCloudIn->points[i].x, nongroundCloudIn->points[i].y}; 
+            Point p = {nongroundCloudIn->points[i].x, nongroundCloudIn->points[i].y}; 
             
-            // if(RCA.isInside(outer, inners, p)){
-                // ConeCloud->push_back(nongroundCloudIn->points[i]);
-            // }
+            if(RCA.isInside(outer, inners, p)){
+                ConeCloud->push_back(nongroundCloudIn->points[i]);
+            }
         }
     }
 

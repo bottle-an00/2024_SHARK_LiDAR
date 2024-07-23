@@ -1,0 +1,8 @@
+prefix=/home/jba/2024_SHARK_LiDAR/install
+
+Name: patchworkpp
+Description: Description of patchworkpp
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: roscpp rospy std_msgs

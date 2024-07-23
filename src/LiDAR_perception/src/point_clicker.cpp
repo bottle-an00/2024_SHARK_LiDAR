@@ -98,8 +98,8 @@ public:
 
         if (keySym && std::string(keySym) == std::string("i"))
         {
-            std::cout << "add: ";
-            std::cout << "mouse clicked: " << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
+            std::cout << "add: " << pointIndex;
+            std::cout << " mouse clicked: " << pos[0] << " " << pos[1] << " " << pos[2] << std::endl;
 
             pointIndex = countLinesInFile(outputFilePath);
 
@@ -138,12 +138,12 @@ void userSetup()
 
     if (choice == 1)
     {
-        std::string filePath = "/home/jba/shark_ws/src/LiDAR_perception/include/RCA/Outer.txt";
+        std::string filePath = "/home/jba/2024_SHARK_LiDAR/src/LiDAR_perception/include/RCA/Outer.txt";
         outputFilePath = filePath;
     }
     else if (choice == 2)
     {
-        std::string folderPath = "/home/jba/shark_ws/src/LiDAR_perception/include/RCA/Inner/";
+        std::string folderPath = "/home/jba/2024_SHARK_LiDAR/src/LiDAR_perception/include/RCA/Inner/";
         
         // // 폴더 내 파일 갯수 파악
         int fileCount = 0;
@@ -177,7 +177,7 @@ int main(int argc, char** argv)
     userSetup();
 
     // PCD 파일 경로 설정
-    std::string pcd_file_path = "/home/jba/Desktop/2024_shark_maps/changed/changed_finalCloud.pcd";
+    std::string pcd_file_path = "/home/jba/2024_SHARK_LiDAR/maps/filtered/filtered_Ground.pcd";
 
     // PCD 파일 읽기
     if (pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_file_path, *cloud) == -1)

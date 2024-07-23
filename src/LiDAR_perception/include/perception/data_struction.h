@@ -58,7 +58,7 @@ typedef pcl::PointXYZI  PointType;
 
 const extern int sensor_channel = 32;
 
-extern const string fileDirectory = "/home/jba/shark_ws/maps";
+extern const string fileDirectory = "/home/jba/2024_SHARK_LiDAR/maps";
 
 struct Ego_status{
     bool is_initialize = false;

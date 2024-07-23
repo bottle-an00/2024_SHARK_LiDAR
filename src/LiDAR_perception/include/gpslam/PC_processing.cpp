@@ -15,18 +15,22 @@ private:
     
     ros::Publisher pubNonGroundMap;
     ros::Publisher pubLaneMap;
+    ros::Publisher pubGroundMap;
 
     pcl::PointCloud<PointType>::Ptr groundCloudIn;// patchwork++에 의해 들어온 ground cloud를 저장
     pcl::PointCloud<PointType>::Ptr nongroundCloudIn;// patchwork++에 의해 들어온  non ground cloud를 저장
 
     pcl::PointCloud<PointType>::Ptr laneCloud;
     pcl::PointCloud<PointType>::Ptr NonLaneCloud;
+    pcl::PointCloud<PointType>::Ptr GroundCloud;
 
     pcl::PointCloud<PointType>::Ptr NonGroundMapCloud;
     pcl::PointCloud<PointType>::Ptr laneMapCloud;
+    pcl::PointCloud<PointType>::Ptr GroundMapCloud;
 
     pcl::VoxelGrid<PointType> downSizeFilterNonGround;
     pcl::VoxelGrid<PointType> downSizeFilterLane;
+    pcl::VoxelGrid<PointType> downSizeFilterGround;
 
     std_msgs::Header cloudHeader;
 
@@ -46,9 +50,11 @@ public:
 
         pubNonGroundMap = nh.advertise<sensor_msgs::PointCloud2> ("/NongroundMap", 1);
         pubLaneMap = nh.advertise<sensor_msgs::PointCloud2> ("/LaneMap", 1); 
+        pubGroundMap = nh.advertise<sensor_msgs::PointCloud2> ("/GroundMap", 1); 
 
         downSizeFilterLane.setLeafSize(0.2, 0.2, 0.2);
         downSizeFilterNonGround.setLeafSize(0.2, 0.2, 0.2);
+        downSizeFilterGround.setLeafSize(0.8, 0.8, 0.8);
 
         allocateMemory();
         resetParameters();
@@ -64,9 +70,13 @@ public:
 
         NonLaneCloud.reset(new pcl::PointCloud<PointType>());
 
+        GroundCloud.reset(new pcl::PointCloud<PointType>());
+
         NonGroundMapCloud.reset(new pcl::PointCloud<PointType>());
 
         laneMapCloud.reset(new pcl::PointCloud<PointType>());
+
+        GroundMapCloud.reset(new pcl::PointCloud<PointType>());
     }
 
     void resetParameters(){
@@ -78,6 +88,8 @@ public:
         laneCloud->clear();
         
         NonLaneCloud->clear();
+
+        GroundCloud->clear();
     }
 
     ~gpslam(){}
@@ -151,6 +163,11 @@ public:
                     laneCloud->push_back(thisPoint);
                 }
             }
+
+            if(cal_range(thisPoint) < 15){
+                thisPoint.x -= 0.4;
+                GroundCloud->push_back(thisPoint);
+            }
         }
 
         cloud_size = nongroundCloudIn->points.size();
@@ -208,6 +225,8 @@ public:
         *NonGroundMapCloud  += *transformPointCloud(NonLaneCloud);
 
     	*laneMapCloud += *transformPointCloud(laneCloud);
+
+    	*GroundMapCloud += *transformPointCloud(GroundCloud);
         
     }
 
@@ -220,6 +239,7 @@ public:
 
         pcl::PointCloud<PointType>::Ptr NonGroundMapCloudDS(new pcl::PointCloud<PointType>());
         pcl::PointCloud<PointType>::Ptr laneMapCloud_DS(new pcl::PointCloud<PointType>());
+        pcl::PointCloud<PointType>::Ptr GroundMapCloud_DS(new pcl::PointCloud<PointType>());
 
         downSizeFilterNonGround.setInputCloud(NonGroundMapCloud);
         downSizeFilterNonGround.filter(*NonGroundMapCloudDS);
@@ -227,8 +247,12 @@ public:
         downSizeFilterLane.setInputCloud(laneMapCloud);
         downSizeFilterLane.filter(*laneMapCloud_DS);
 
+        downSizeFilterGround.setInputCloud(GroundMapCloud);
+        downSizeFilterGround.filter(*GroundMapCloud_DS);
+
         pcl::io::savePCDFileASCII(fileDirectory+"/NongroundMap.pcd", *NonGroundMapCloudDS);
         pcl::io::savePCDFileASCII(fileDirectory+"/Lane.pcd", *laneMapCloud_DS);
+        pcl::io::savePCDFileASCII(fileDirectory+"/Ground.pcd", *GroundMapCloud_DS);
 
     }
 
@@ -250,6 +274,12 @@ public:
             pubLaneMap.publish(laserCloudTemp);
         }
 
+        if (pubGroundMap.getNumSubscribers() != 0){
+            pcl::toROSMsg(*GroundMapCloud, laserCloudTemp);
+            laserCloudTemp.header.stamp = cloudHeader.stamp;
+            laserCloudTemp.header.frame_id = "map";
+            pubGroundMap.publish(laserCloudTemp);
+        }
     }
 
     

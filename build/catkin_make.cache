@@ -1,0 +1,2 @@
+LiDAR_perception:MORAI-ROS_morai_msgs:patchwork-plusplus-ros
+-DCATKIN_DEVEL_PREFIX=/home/jba/2024_SHARK_LiDAR/devel -DCMAKE_INSTALL_PREFIX=/home/jba/2024_SHARK_LiDAR/install -G Unix Makefiles
