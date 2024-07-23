@@ -83,7 +83,7 @@ class GetTrafficLightStatus {
   static getMessageSize(object) {
     let length = 0;
     length += std_msgs.msg.Header.getMessageSize(object.header);
-    length += object.trafficLightIndex.length;
+    length += _getByteLength(object.trafficLightIndex);
     return length + 8;
   }
 

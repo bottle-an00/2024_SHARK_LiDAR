@@ -25,8 +25,8 @@
    (setq _requestRespawn __requestRespawn)
    self)
   (:requestRespawn
-   (&optional __requestRespawn)
-   (if __requestRespawn (setq _requestRespawn __requestRespawn)) _requestRespawn)
+   (&optional (__requestRespawn :null))
+   (if (not (eq __requestRespawn :null)) (setq _requestRespawn __requestRespawn)) _requestRespawn)
   (:serialization-length
    ()
    (+

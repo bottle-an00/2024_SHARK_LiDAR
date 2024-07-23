@@ -56,8 +56,8 @@
    (&optional __heading)
    (if __heading (setq _heading __heading)) _heading)
   (:mountStatus
-   (&optional __mountStatus)
-   (if __mountStatus (setq _mountStatus __mountStatus)) _mountStatus)
+   (&optional (__mountStatus :null))
+   (if (not (eq __mountStatus :null)) (setq _mountStatus __mountStatus)) _mountStatus)
   (:serialization-length
    ()
    (+

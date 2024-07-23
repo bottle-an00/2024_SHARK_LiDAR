@@ -19,7 +19,7 @@
 (defmethod morai_msgs::VehicleCollision
   (:init
    (&key
-    ((:crashed_vehicles __crashed_vehicles) (let (r) (dotimes (i 0) (push (instance morai_msgs::ObjectStatus :init) r)) r))
+    ((:crashed_vehicles __crashed_vehicles) ())
     )
    (send-super :init)
    (setq _crashed_vehicles __crashed_vehicles)

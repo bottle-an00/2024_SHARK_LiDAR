@@ -166,16 +166,6 @@ namespace message_traits
 
 
 template <class ContainerAllocator>
-struct IsFixedSize< ::morai_msgs::ReplayInfo_<ContainerAllocator> >
-  : FalseType
-  { };
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::morai_msgs::ReplayInfo_<ContainerAllocator> const>
-  : FalseType
-  { };
-
-template <class ContainerAllocator>
 struct IsMessage< ::morai_msgs::ReplayInfo_<ContainerAllocator> >
   : TrueType
   { };
@@ -183,6 +173,16 @@ struct IsMessage< ::morai_msgs::ReplayInfo_<ContainerAllocator> >
 template <class ContainerAllocator>
 struct IsMessage< ::morai_msgs::ReplayInfo_<ContainerAllocator> const>
   : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::morai_msgs::ReplayInfo_<ContainerAllocator> >
+  : FalseType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::morai_msgs::ReplayInfo_<ContainerAllocator> const>
+  : FalseType
   { };
 
 template <class ContainerAllocator>

@@ -2,7 +2,6 @@ file(REMOVE_RECURSE
   "/home/jba/2024_SHARK_LiDAR/devel/lib/LiDAR_perception/main"
   "/home/jba/2024_SHARK_LiDAR/devel/lib/LiDAR_perception/main.pdb"
   "CMakeFiles/main.dir/src/main.cpp.o"
-  "CMakeFiles/main.dir/src/main.cpp.o.d"
 )
 
 # Per-language clean rules from dependency scanning.

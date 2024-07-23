@@ -34,14 +34,14 @@
    (&optional __master_id)
    (if __master_id (setq _master_id __master_id)) _master_id)
   (:status
-   (&optional __status)
-   (if __status (setq _status __status)) _status)
+   (&optional (__status :null))
+   (if (not (eq __status :null)) (setq _status __status)) _status)
   (:frame
    (&optional __frame)
    (if __frame (setq _frame __frame)) _frame)
   (:can_send_tick
-   (&optional __can_send_tick)
-   (if __can_send_tick (setq _can_send_tick __can_send_tick)) _can_send_tick)
+   (&optional (__can_send_tick :null))
+   (if (not (eq __can_send_tick :null)) (setq _can_send_tick __can_send_tick)) _can_send_tick)
   (:serialization-length
    ()
    (+

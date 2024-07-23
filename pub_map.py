@@ -1,22 +1,36 @@
 #!/usr/bin/env python
 import rospy
-from sensor_msgs.msg import PointCloud2
+from sensor_msgs.msg import PointCloud2, PointField
 import sensor_msgs.point_cloud2 as pc2
-import pcl
+import open3d as o3d
+import numpy as np
 import os
 
 def read_pcd_file(pcd_file):
-    
+    # Check if the file exists
     if os.path.exists(pcd_file):
-        cloud = pcl.load(pcd_file)
-        point_cloud_msg = PointCloud2()
+        # Read the point cloud using Open3D
+        cloud = o3d.io.read_point_cloud(pcd_file)
+        points = np.asarray(cloud.points)
         
-        header = point_cloud_msg.header
+        # Define the fields for the PointCloud2 message
+        fields = [
+            PointField('x', 0, PointField.FLOAT32, 1),
+            PointField('y', 4, PointField.FLOAT32, 1),
+            PointField('z', 8, PointField.FLOAT32, 1),
+        ]
+        
+        # Create the header
+        header = rospy.Header()
         header.stamp = rospy.Time.now()
-        header.frame_id = "map"  
+        header.frame_id = "map"
 
-        pcd_data = pc2.create_cloud_xyz32(header, cloud.to_array())
-        return pcd_data
+        # Create the PointCloud2 message
+        point_cloud_msg = pc2.create_cloud(header, fields, points)
+        return point_cloud_msg
+    else:
+        rospy.logerr(f"PCD file {pcd_file} does not exist")
+        return None
 
 def main():
     try:

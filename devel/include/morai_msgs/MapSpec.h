@@ -136,16 +136,6 @@ namespace message_traits
 
 
 template <class ContainerAllocator>
-struct IsFixedSize< ::morai_msgs::MapSpec_<ContainerAllocator> >
-  : FalseType
-  { };
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::morai_msgs::MapSpec_<ContainerAllocator> const>
-  : FalseType
-  { };
-
-template <class ContainerAllocator>
 struct IsMessage< ::morai_msgs::MapSpec_<ContainerAllocator> >
   : TrueType
   { };
@@ -153,6 +143,16 @@ struct IsMessage< ::morai_msgs::MapSpec_<ContainerAllocator> >
 template <class ContainerAllocator>
 struct IsMessage< ::morai_msgs::MapSpec_<ContainerAllocator> const>
   : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::morai_msgs::MapSpec_<ContainerAllocator> >
+  : FalseType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::morai_msgs::MapSpec_<ContainerAllocator> const>
+  : FalseType
   { };
 
 template <class ContainerAllocator>

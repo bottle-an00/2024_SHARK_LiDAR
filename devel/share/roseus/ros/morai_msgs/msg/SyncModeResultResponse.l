@@ -25,8 +25,8 @@
    (setq _result __result)
    self)
   (:result
-   (&optional __result)
-   (if __result (setq _result __result)) _result)
+   (&optional (__result :null))
+   (if (not (eq __result :null)) (setq _result __result)) _result)
   (:serialization-length
    ()
    (+

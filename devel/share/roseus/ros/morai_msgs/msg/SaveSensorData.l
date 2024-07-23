@@ -29,8 +29,8 @@
    (setq _file_dir (string __file_dir))
    self)
   (:is_custom_file_name
-   (&optional __is_custom_file_name)
-   (if __is_custom_file_name (setq _is_custom_file_name __is_custom_file_name)) _is_custom_file_name)
+   (&optional (__is_custom_file_name :null))
+   (if (not (eq __is_custom_file_name :null)) (setq _is_custom_file_name __is_custom_file_name)) _is_custom_file_name)
   (:custom_file_name
    (&optional __custom_file_name)
    (if __custom_file_name (setq _custom_file_name __custom_file_name)) _custom_file_name)

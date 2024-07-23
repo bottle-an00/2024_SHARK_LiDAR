@@ -203,9 +203,9 @@ class ObjectStatusExtended {
 
   static getMessageSize(object) {
     let length = 0;
-    length += object.name.length;
+    length += _getByteLength(object.name);
     object.global_path_info.forEach((val) => {
-      length += 4 + val.length;
+      length += 4 + _getByteLength(val);
     });
     return length + 172;
   }

@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
-  "/home/jba/2024_SHARK_LiDAR/devel/lib/python2.7/dist-packages/jsk_recognition_msgs/msg/_PolygonArray.py"
-  "/home/jba/2024_SHARK_LiDAR/devel/lib/python2.7/dist-packages/jsk_recognition_msgs/msg/__init__.py"
+  "/home/jba/2024_SHARK_LiDAR/devel/lib/python3/dist-packages/jsk_recognition_msgs/msg/_PolygonArray.py"
+  "/home/jba/2024_SHARK_LiDAR/devel/lib/python3/dist-packages/jsk_recognition_msgs/msg/__init__.py"
   "CMakeFiles/jsk_recognition_msgs_generate_messages_py"
 )
 

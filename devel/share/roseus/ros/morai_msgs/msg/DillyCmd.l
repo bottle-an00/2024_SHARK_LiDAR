@@ -27,8 +27,8 @@
    (setq _deliveryItemIndex (round __deliveryItemIndex))
    self)
   (:isPickup
-   (&optional __isPickup)
-   (if __isPickup (setq _isPickup __isPickup)) _isPickup)
+   (&optional (__isPickup :null))
+   (if (not (eq __isPickup :null)) (setq _isPickup __isPickup)) _isPickup)
   (:deliveryItemIndex
    (&optional __deliveryItemIndex)
    (if __deliveryItemIndex (setq _deliveryItemIndex __deliveryItemIndex)) _deliveryItemIndex)

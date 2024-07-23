@@ -81,7 +81,7 @@ class SyncModeInfo {
 
   static getMessageSize(object) {
     let length = 0;
-    length += object.master_id.length;
+    length += _getByteLength(object.master_id);
     return length + 14;
   }
 

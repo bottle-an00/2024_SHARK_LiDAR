@@ -22,7 +22,7 @@
   (:init
    (&key
     ((:header __header) (instance std_msgs::Header :init))
-    ((:npc_list __npc_list) (let (r) (dotimes (i 0) (push (instance morai_msgs::NpcGhostInfo :init) r)) r))
+    ((:npc_list __npc_list) ())
     )
    (send-super :init)
    (setq _header __header)

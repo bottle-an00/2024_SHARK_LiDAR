@@ -37,8 +37,8 @@
    (&optional __frame)
    (if __frame (setq _frame __frame)) _frame)
   (:result
-   (&optional __result)
-   (if __result (setq _result __result)) _result)
+   (&optional (__result :null))
+   (if (not (eq __result :null)) (setq _result __result)) _result)
   (:time_step
    (&optional __time_step)
    (if __time_step (setq _time_step __time_step)) _time_step)

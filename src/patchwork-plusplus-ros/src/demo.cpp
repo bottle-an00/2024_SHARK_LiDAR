@@ -23,7 +23,7 @@ sensor_msgs::PointCloud2 cloud2msg(pcl::PointCloud<T> cloud, const ros::Time& st
     sensor_msgs::PointCloud2 cloud_ROS;
     pcl::toROSMsg(cloud, cloud_ROS);
     cloud_ROS.header.stamp = stamp;
-    cloud_ROS.header.frame_id = frame_id;
+    cloud_ROS.header.frame_id = "base_link";
     return cloud_ROS;
 }
 

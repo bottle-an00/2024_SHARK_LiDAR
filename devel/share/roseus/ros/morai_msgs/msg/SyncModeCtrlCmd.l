@@ -39,8 +39,8 @@
        (if __command (setq _command (car __command)))
        _command)))
   (:sensor_capture
-   (&optional __sensor_capture)
-   (if __sensor_capture (setq _sensor_capture __sensor_capture)) _sensor_capture)
+   (&optional (__sensor_capture :null))
+   (if (not (eq __sensor_capture :null)) (setq _sensor_capture __sensor_capture)) _sensor_capture)
   (:serialization-length
    ()
    (+

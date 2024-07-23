@@ -24,7 +24,7 @@
     ((:header __header) (instance std_msgs::Header :init))
     ((:unique_id __unique_id) 0)
     ((:vehicle __vehicle) (instance morai_msgs::FaultStatusInfo_Vehicle :init))
-    ((:sensors __sensors) (let (r) (dotimes (i 0) (push (instance morai_msgs::FaultStatusInfo_Sensor :init) r)) r))
+    ((:sensors __sensors) ())
     )
    (send-super :init)
    (setq _header __header)

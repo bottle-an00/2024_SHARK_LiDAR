@@ -119,22 +119,22 @@ namespace message_traits
 
 
 template <class ContainerAllocator>
-struct IsFixedSize< ::morai_msgs::FaultInjection_Sensor_<ContainerAllocator> >
-  : TrueType
-  { };
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::morai_msgs::FaultInjection_Sensor_<ContainerAllocator> const>
-  : TrueType
-  { };
-
-template <class ContainerAllocator>
 struct IsMessage< ::morai_msgs::FaultInjection_Sensor_<ContainerAllocator> >
   : TrueType
   { };
 
 template <class ContainerAllocator>
 struct IsMessage< ::morai_msgs::FaultInjection_Sensor_<ContainerAllocator> const>
+  : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::morai_msgs::FaultInjection_Sensor_<ContainerAllocator> >
+  : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::morai_msgs::FaultInjection_Sensor_<ContainerAllocator> const>
   : TrueType
   { };
 

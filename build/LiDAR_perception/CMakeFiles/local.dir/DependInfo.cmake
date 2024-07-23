@@ -1,14 +1,30 @@
-
-# Consider dependencies only in project.
-set(CMAKE_DEPENDS_IN_PROJECT_ONLY OFF)
-
 # The set of languages for which implicit dependencies are needed:
 set(CMAKE_DEPENDS_LANGUAGES
+  "CXX"
+  )
+# The set of files for implicit dependencies of each language:
+set(CMAKE_DEPENDS_CHECK_CXX
+  "/home/jba/2024_SHARK_LiDAR/src/LiDAR_perception/src/local.cpp" "/home/jba/2024_SHARK_LiDAR/build/LiDAR_perception/CMakeFiles/local.dir/src/local.cpp.o"
+  )
+set(CMAKE_CXX_COMPILER_ID "GNU")
+
+# Preprocessor definitions for this target.
+set(CMAKE_TARGET_DEFINITIONS_CXX
+  "ROSCONSOLE_BACKEND_LOG4CXX"
+  "ROS_BUILD_SHARED_LIBS=1"
+  "ROS_PACKAGE_NAME=\"LiDAR_perception\""
   )
 
-# The set of dependency files which are needed:
-set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/jba/2024_SHARK_LiDAR/src/LiDAR_perception/src/local.cpp" "LiDAR_perception/CMakeFiles/local.dir/src/local.cpp.o" "gcc" "LiDAR_perception/CMakeFiles/local.dir/src/local.cpp.o.d"
+# The include file search paths:
+set(CMAKE_CXX_TARGET_INCLUDE_PATH
+  "/home/jba/2024_SHARK_LiDAR/src/LiDAR_perception/include"
+  "/home/jba/2024_SHARK_LiDAR/devel/include"
+  "/opt/ros/noetic/include"
+  "/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp"
+  "/usr/include/eigen3"
+  "/usr/include/pcl-1.10"
+  "/usr/include/vtk-7.1"
+  "/usr/include/freetype2"
   )
 
 # Targets to which this target links.

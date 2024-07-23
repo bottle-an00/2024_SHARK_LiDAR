@@ -27,8 +27,8 @@
    (setq _fault_subclass __fault_subclass)
    self)
   (:status
-   (&optional __status)
-   (if __status (setq _status __status)) _status)
+   (&optional (__status :null))
+   (if (not (eq __status :null)) (setq _status __status)) _status)
   (:fault_subclass
    (&optional __fault_subclass)
    (if __fault_subclass (setq _fault_subclass __fault_subclass)) _fault_subclass)

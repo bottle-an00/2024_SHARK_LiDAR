@@ -103,7 +103,7 @@ class MoraiSimProcHandle {
 
   static getMessageSize(object) {
     let length = 0;
-    length += object.rosbag_file_name.length;
+    length += _getByteLength(object.rosbag_file_name);
     return length + 17;
   }
 

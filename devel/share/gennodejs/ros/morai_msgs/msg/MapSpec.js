@@ -137,7 +137,7 @@ class MapSpec {
 
   static getMessageSize(object) {
     let length = 0;
-    length += object.ellipse.length;
+    length += _getByteLength(object.ellipse);
     return length + 76;
   }
 

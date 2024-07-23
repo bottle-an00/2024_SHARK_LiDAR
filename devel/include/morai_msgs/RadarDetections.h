@@ -95,16 +95,6 @@ namespace message_traits
 
 
 template <class ContainerAllocator>
-struct IsFixedSize< ::morai_msgs::RadarDetections_<ContainerAllocator> >
-  : FalseType
-  { };
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::morai_msgs::RadarDetections_<ContainerAllocator> const>
-  : FalseType
-  { };
-
-template <class ContainerAllocator>
 struct IsMessage< ::morai_msgs::RadarDetections_<ContainerAllocator> >
   : TrueType
   { };
@@ -112,6 +102,16 @@ struct IsMessage< ::morai_msgs::RadarDetections_<ContainerAllocator> >
 template <class ContainerAllocator>
 struct IsMessage< ::morai_msgs::RadarDetections_<ContainerAllocator> const>
   : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::morai_msgs::RadarDetections_<ContainerAllocator> >
+  : FalseType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::morai_msgs::RadarDetections_<ContainerAllocator> const>
+  : FalseType
   { };
 
 template <class ContainerAllocator>

@@ -107,16 +107,6 @@ namespace message_traits
 
 
 template <class ContainerAllocator>
-struct IsFixedSize< ::jsk_recognition_msgs::PolygonArray_<ContainerAllocator> >
-  : FalseType
-  { };
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::jsk_recognition_msgs::PolygonArray_<ContainerAllocator> const>
-  : FalseType
-  { };
-
-template <class ContainerAllocator>
 struct IsMessage< ::jsk_recognition_msgs::PolygonArray_<ContainerAllocator> >
   : TrueType
   { };
@@ -124,6 +114,16 @@ struct IsMessage< ::jsk_recognition_msgs::PolygonArray_<ContainerAllocator> >
 template <class ContainerAllocator>
 struct IsMessage< ::jsk_recognition_msgs::PolygonArray_<ContainerAllocator> const>
   : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::jsk_recognition_msgs::PolygonArray_<ContainerAllocator> >
+  : FalseType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::jsk_recognition_msgs::PolygonArray_<ContainerAllocator> const>
+  : FalseType
   { };
 
 template <class ContainerAllocator>

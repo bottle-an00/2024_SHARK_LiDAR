@@ -191,7 +191,7 @@ public:
     void copyPointCloud(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg){
 
         cloudHeader = laserCloudMsg->header;
-        cloudHeader.frame_id = "/base_link";
+        cloudHeader.frame_id = "base_link";
         cloudHeader.stamp = ros::Time::now(); 
         pcl::fromROSMsg(*laserCloudMsg, *nongroundCloudIn);
 
@@ -238,15 +238,29 @@ public:
     }
 
     void RCA_test(){
-        size_t cloud_size = nongroundCloudIn->points.size();
+
+        pcl::PointCloud<PointType>::Ptr downsampled_cloud(new pcl::PointCloud<PointType>);
+        
+        pcl::VoxelGrid<PointType> sor;
+        sor.setInputCloud(nongroundCloudIn);  
+        sor.setLeafSize(0.3f, 0.3f, 0.15f);  
+        
+        sor.filter(*downsampled_cloud);
+
+
+        size_t cloud_size = downsampled_cloud->points.size();
 
         for(int i = 0; i < cloud_size; i++){
-            nongroundCloudIn->points[i].x -= 0.4;//gps와의 match를 위한 필수 조건
-            
-            Point p = {nongroundCloudIn->points[i].x, nongroundCloudIn->points[i].y}; 
+            downsampled_cloud->points[i].x -= 0.4;//gps와의 match를 위한 필수 조건
+        }
+        
+        *downsampled_cloud = *transformPointCloud(downsampled_cloud);
+
+        for(int i = 0; i < cloud_size; i++){    
+            Point p = {downsampled_cloud->points[i].x, downsampled_cloud->points[i].y}; 
             
             if(RCA.isInside(outer, inners, p)){
-                ConeCloud->push_back(nongroundCloudIn->points[i]);
+                ConeCloud->push_back(downsampled_cloud->points[i]);
             }
         }
         
@@ -481,7 +495,7 @@ public:
         if (pubConeCloud.getNumSubscribers() != 0){
             pcl::toROSMsg(*ConeCloud, laserCloudTemp);
             laserCloudTemp.header.stamp = cloudHeader.stamp;
-            laserCloudTemp.header.frame_id =cloudHeader.frame_id;
+            laserCloudTemp.header.frame_id ="map";
             pubConeCloud.publish(laserCloudTemp);
         }
 

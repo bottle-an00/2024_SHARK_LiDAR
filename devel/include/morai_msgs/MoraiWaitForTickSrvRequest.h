@@ -88,16 +88,6 @@ namespace message_traits
 
 
 template <class ContainerAllocator>
-struct IsFixedSize< ::morai_msgs::MoraiWaitForTickSrvRequest_<ContainerAllocator> >
-  : FalseType
-  { };
-
-template <class ContainerAllocator>
-struct IsFixedSize< ::morai_msgs::MoraiWaitForTickSrvRequest_<ContainerAllocator> const>
-  : FalseType
-  { };
-
-template <class ContainerAllocator>
 struct IsMessage< ::morai_msgs::MoraiWaitForTickSrvRequest_<ContainerAllocator> >
   : TrueType
   { };
@@ -105,6 +95,16 @@ struct IsMessage< ::morai_msgs::MoraiWaitForTickSrvRequest_<ContainerAllocator> 
 template <class ContainerAllocator>
 struct IsMessage< ::morai_msgs::MoraiWaitForTickSrvRequest_<ContainerAllocator> const>
   : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::morai_msgs::MoraiWaitForTickSrvRequest_<ContainerAllocator> >
+  : FalseType
+  { };
+
+template <class ContainerAllocator>
+struct IsFixedSize< ::morai_msgs::MoraiWaitForTickSrvRequest_<ContainerAllocator> const>
+  : FalseType
   { };
 
 template <class ContainerAllocator>

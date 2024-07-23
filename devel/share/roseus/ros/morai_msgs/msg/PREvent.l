@@ -25,8 +25,8 @@
    (setq _mountVehicle __mountVehicle)
    self)
   (:mountVehicle
-   (&optional __mountVehicle)
-   (if __mountVehicle (setq _mountVehicle __mountVehicle)) _mountVehicle)
+   (&optional (__mountVehicle :null))
+   (if (not (eq __mountVehicle :null)) (setq _mountVehicle __mountVehicle)) _mountVehicle)
   (:serialization-length
    ()
    (+
