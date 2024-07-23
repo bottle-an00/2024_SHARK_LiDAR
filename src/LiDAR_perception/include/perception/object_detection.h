@@ -27,6 +27,7 @@ private:
     ros::Publisher pub_prev_cone;
     ros::Publisher pubConesCenterKF;
     ros::Publisher pub_local;
+    ros::Publisher pubOuter;
 
     pcl::PointCloud<PointType>::Ptr groundCloudIn;// patchwork++에 의해 들어온 ground cloud를 저장
     pcl::PointCloud<PointType>::Ptr nongroundCloudIn;// patchwork++에 의해 들어온  non ground cloud를 저장
@@ -42,6 +43,7 @@ private:
     visualization_msgs::MarkerArray cone_center_markerarray;    
     visualization_msgs::MarkerArray cone_center_markerarrayKF;    
     visualization_msgs::MarkerArray normal_vectors;    
+    visualization_msgs::MarkerArray outer_zone;    
     vector<Object_info> obj_center_point;
     vector<PointType> lastest_cones;
 
@@ -96,6 +98,7 @@ public:
         pubConesBoundary = nh.advertise<visualization_msgs::MarkerArray>("/cone_BoundingBox", 1);
         pubVector =  nh.advertise<visualization_msgs::MarkerArray>("/vectors", 1);
         pub_local =  nh.advertise<geometry_msgs::PoseStamped>("/local_msgs_for_vision_sub", 1);
+        pubOuter  =  nh.advertise<visualization_msgs::MarkerArray>("/outer_zone", 1);
 
         pub_prev_cone = nh.advertise<sensor_msgs::PointCloud2> ("/prev_conecloud", 1); 
 
@@ -123,6 +126,7 @@ public:
         cone_center_markerarray.markers.clear();
         cone_center_markerarrayKF.markers.clear();
         normal_vectors.markers.clear();
+        outer_zone.markers.clear();
 
         outer = RCA.readOuterPolygon();
         inners = RCA.readInnerPolygon();
@@ -147,6 +151,7 @@ public:
         cone_center_markerarrayKF.markers.clear();
         cone_boundary_markerarray.markers.clear();
         normal_vectors.markers.clear();
+        outer_zone.markers.clear();
         count++;
     }
 
@@ -244,6 +249,8 @@ public:
                 ConeCloud->push_back(nongroundCloudIn->points[i]);
             }
         }
+        
+        Vt.ROIzonevisualization(outer_zone, outer,inners);
     }
 
     pcl::PointCloud<PointType>::Ptr transformPointCloud(pcl::PointCloud<PointType>::Ptr cloudIn){
@@ -497,6 +504,7 @@ public:
         pubConesCenterKF.publish(cone_center_markerarrayKF);
         pubConesBoundary.publish(cone_boundary_markerarray);
         pubVector.publish(normal_vectors);
+        pubOuter.publish(outer_zone);
     }
 
     

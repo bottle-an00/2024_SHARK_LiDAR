@@ -20,7 +20,7 @@ def read_pcd_file(pcd_file):
 
 def main():
     try:
-        directory = "/home/jba/shark_ws/maps/filtered/"
+        directory = "/home/jba/2024_SHARK_LiDAR/maps/filtered/"
 
         pcd_files = [f for f in os.listdir(directory) if f.endswith('.pcd')]
 
@@ -30,6 +30,7 @@ def main():
 
         pub1 = rospy.Publisher("HD_MAP/"+pcd_files[0].split('.')[0], PointCloud2, queue_size=10)
         pub2 = rospy.Publisher("HD_MAP/"+pcd_files[1].split('.')[0], PointCloud2, queue_size=10)
+        pub3 = rospy.Publisher("HD_MAP/"+pcd_files[2].split('.')[0], PointCloud2, queue_size=10)
         
         rospy.Rate(0.01)
         
@@ -37,6 +38,7 @@ def main():
             print("----HD_map publining------")
             pub1.publish(read_pcd_file(pcd_files_path[0]))
             pub2.publish(read_pcd_file(pcd_files_path[1]))
+            pub3.publish(read_pcd_file(pcd_files_path[2]))
 
     except rospy.ROSInterruptException:
         pass

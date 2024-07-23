@@ -5,6 +5,22 @@
         "bitset": "cpp",
         "memory": "cpp",
         "random": "cpp",
-        "optional": "cpp"
+        "optional": "cpp",
+        "array": "cpp",
+        "hash_map": "cpp",
+        "hash_set": "cpp",
+        "string_view": "cpp",
+        "initializer_list": "cpp",
+        "utility": "cpp",
+        "deque": "cpp",
+        "string": "cpp",
+        "vector": "cpp",
+        "*.tcc": "cpp",
+        "list": "cpp",
+        "unordered_map": "cpp",
+        "unordered_set": "cpp",
+        "system_error": "cpp",
+        "sstream": "cpp",
+        "ostream": "cpp"
     }
 }

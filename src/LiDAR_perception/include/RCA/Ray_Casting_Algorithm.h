@@ -67,7 +67,7 @@ public:
     
     Polygon readOuterPolygon(){
 
-        Polygon output_Polygon = readPolygon("/home/jba/shark_ws/src/LiDAR_perception/include/RCA/Outer.txt");
+        Polygon output_Polygon = readPolygon("/home/jba/2024_SHARK_LiDAR/src/LiDAR_perception/include/RCA/Outer.txt");
 
         cout << "Outer::" << "point num :: " << output_Polygon.vertices.size() << endl;
 
@@ -78,7 +78,7 @@ public:
 
         vector<Polygon> innerPolygon;
 
-        string folder_path = "/home/jba/shark_ws/src/LiDAR_perception/include/RCA/Inner/";
+        string folder_path = "/home/jba/2024_SHARK_LiDAR/src/LiDAR_perception/include/RCA/Inner/";
 
         for (const auto& entry : fs::directory_iterator(folder_path)) {
             if (fs::is_regular_file(entry) && entry.path().extension() == ".txt") {

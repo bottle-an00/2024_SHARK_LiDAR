@@ -19,6 +19,8 @@
 
 #include <ros/ros.h>
 
+#include "RCA/Ray_Casting_Algorithm.h"
+
 using namespace std;
 
 class Visualization_tool
@@ -290,6 +292,62 @@ public:
     //     }
     // }
 
+    void ROIzonevisualization(visualization_msgs::MarkerArray& RCA_Lines ,Polygon &outer, vector<Polygon>& Inners){
+
+        int id =0; 
+        getPolygonInfo(id, RCA_Lines,outer);
+        
+        for(auto inner : Inners){
+            int inner_start =id;
+            getPolygonInfo(id, RCA_Lines,inner, inner_start);
+        }
+        
+    }
+
+    void getPolygonInfo(int& id, visualization_msgs::MarkerArray& RCA_Lines ,Polygon &zone, int start_num =0){
+        geometry_msgs::Point first_points;
+
+        for(vector<Point>::const_iterator iter = zone.vertices.begin();iter != zone.vertices.end();iter++){
+            visualization_msgs::Marker line_strip;
+            line_strip.header.frame_id = "map";
+            line_strip.header.stamp = ros::Time::now();
+            line_strip.ns = "polygons";
+            line_strip.action = visualization_msgs::Marker::ADD;
+            line_strip.pose.orientation.w = 1.0;
+            line_strip.id = id;
+            line_strip.type = visualization_msgs::Marker::LINE_STRIP;
+
+            line_strip.scale.x = 1.0;
+
+            line_strip.color.r = 1.0;
+            line_strip.color.g = 1.0;
+            line_strip.color.a = 1.0;
+
+            geometry_msgs::Point p;
+            p.x = iter->x;
+            p.y = iter->y;
+            p.z = 0.0;  // 2D plane, z=0
+            line_strip.points.push_back(p);
+            if(id-start_num ==0 ) first_points = p;
+
+            vector<Point>::const_iterator next_iter = ++iter;
+            if(next_iter !=  zone.vertices.end()){
+                geometry_msgs::Point next_p;
+                next_p.x = next_iter->x;
+                next_p.y = next_iter->y;
+                next_p.z = 0.0;
+                line_strip.points.push_back(next_p);
+            }else{
+                line_strip.points.push_back(first_points);
+            }
+
+            iter--;
+            
+            RCA_Lines.markers.push_back(line_strip);
+            
+            id++;
+        }
+    }
 };
 
 

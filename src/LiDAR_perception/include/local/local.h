@@ -117,7 +117,6 @@ public:
 
         // Compute the roll, pitch, and yaw angles from tf::Quaternion
         tf::Matrix3x3(tf_quaternion).getRPY(roll, pitch, yaw);
-        std::cout << roll <<" s " << pitch << " sss " << yaw << std::endl;
 
     }
 
@@ -125,7 +124,7 @@ public:
 
         // geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(transformTobeMapped[2]);
         geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromRollPitchYaw
-                                  (0.0, 0.0, yaw*PI/180);
+                                  (roll, pitch, yaw);
 
         MappedTrans.stamp_ = stamp_;
         MappedTrans.setRotation(tf::Quaternion(odom_quat.x, odom_quat.y, odom_quat.z, odom_quat.w));
