@@ -117,16 +117,6 @@ namespace message_traits
 
 
 template <class ContainerAllocator>
-struct IsMessage< ::morai_msgs::MoraiSimProcHandle_<ContainerAllocator> >
-  : TrueType
-  { };
-
-template <class ContainerAllocator>
-struct IsMessage< ::morai_msgs::MoraiSimProcHandle_<ContainerAllocator> const>
-  : TrueType
-  { };
-
-template <class ContainerAllocator>
 struct IsFixedSize< ::morai_msgs::MoraiSimProcHandle_<ContainerAllocator> >
   : FalseType
   { };
@@ -134,6 +124,16 @@ struct IsFixedSize< ::morai_msgs::MoraiSimProcHandle_<ContainerAllocator> >
 template <class ContainerAllocator>
 struct IsFixedSize< ::morai_msgs::MoraiSimProcHandle_<ContainerAllocator> const>
   : FalseType
+  { };
+
+template <class ContainerAllocator>
+struct IsMessage< ::morai_msgs::MoraiSimProcHandle_<ContainerAllocator> >
+  : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsMessage< ::morai_msgs::MoraiSimProcHandle_<ContainerAllocator> const>
+  : TrueType
   { };
 
 template <class ContainerAllocator>

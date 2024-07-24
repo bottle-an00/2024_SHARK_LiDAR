@@ -49,8 +49,8 @@
        (if __lamps (setq _lamps (car __lamps)))
        _lamps)))
   (:set_pause
-   (&optional (__set_pause :null))
-   (if (not (eq __set_pause :null)) (setq _set_pause __set_pause)) _set_pause)
+   (&optional __set_pause)
+   (if __set_pause (setq _set_pause __set_pause)) _set_pause)
   (:serialization-length
    ()
    (+

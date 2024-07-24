@@ -2,6 +2,7 @@ file(REMOVE_RECURSE
   "/home/jba/2024_SHARK_LiDAR/devel/lib/LiDAR_perception/gpslam"
   "/home/jba/2024_SHARK_LiDAR/devel/lib/LiDAR_perception/gpslam.pdb"
   "CMakeFiles/gpslam.dir/include/gpslam/PC_processing.cpp.o"
+  "CMakeFiles/gpslam.dir/include/gpslam/PC_processing.cpp.o.d"
 )
 
 # Per-language clean rules from dependency scanning.

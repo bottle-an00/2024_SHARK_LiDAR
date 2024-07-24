@@ -17,11 +17,15 @@
 
 namespace fs = boost::filesystem;
 
-pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud4nonground(new pcl::PointCloud<pcl::PointXYZRGB>);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud4lane(new pcl::PointCloud<pcl::PointXYZRGB>);
 int pointIndex = 0;
 std::ofstream outputFile;
 std::vector<std::string> lines; // 텍스트 파일의 줄을 저장할 벡터
 std::string outputFilePath;
+
+bool is_o_clicked = true;
 
 void loadFile(const std::string& filePath)
 {
@@ -95,7 +99,7 @@ public:
         double* pos = picker->GetPickPosition();
 
         const char* keySym = this->GetInteractor()->GetKeySym();
-
+        
         if (keySym && std::string(keySym) == std::string("i"))
         {
             std::cout << "add: " << pointIndex;
@@ -178,19 +182,48 @@ int main(int argc, char** argv)
 
     // PCD 파일 경로 설정
     std::string pcd_file_path = "/home/jba/2024_SHARK_LiDAR/maps/filtered/filtered_Ground.pcd";
+    std::string pcd_file_path2 = "/home/jba/2024_SHARK_LiDAR/maps/filtered/filtered_NongroundMap.pcd";
+    std::string pcd_file_path3 = "/home/jba/2024_SHARK_LiDAR/maps/filtered/filtered_Lane.pcd";
 
     // PCD 파일 읽기
-    if (pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_file_path, *cloud) == -1)
+    if (pcl::io::loadPCDFile<pcl::PointXYZRGB>(pcd_file_path, *cloud) == -1 || pcl::io::loadPCDFile<pcl::PointXYZRGB>(pcd_file_path2, *cloud4nonground) == -1 
+    || pcl::io::loadPCDFile<pcl::PointXYZRGB>(pcd_file_path3, *cloud4lane) == -1  )
     {
         PCL_ERROR("Couldn't read file \n");
         return (-1);
     }
 
+    for(auto& point: cloud4nonground->points){
+        point.r = 255;
+        point.g = 255;
+        point.b = 0;
+    }
+
+    for(auto& point: cloud->points){
+        point.r = 155;
+        point.g = 155;
+        point.b = 155;
+    }
+
+    for(auto& point: cloud4lane->points){
+        point.r = 0;
+        point.g = 0;
+        point.b = 255;
+    }
+    
     // PCL 시각화 객체 생성
     pcl::visualization::PCLVisualizer::Ptr viewer(new pcl::visualization::PCLVisualizer("3D Viewer"));
     viewer->setBackgroundColor(0, 0, 0);
-    viewer->addPointCloud<pcl::PointXYZ>(cloud, "sample cloud");
-    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "sample cloud");
+    
+    viewer->addPointCloud<pcl::PointXYZRGB>(cloud, "ground cloud");
+    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "ground cloud");
+
+    viewer->addPointCloud<pcl::PointXYZRGB>(cloud4nonground, "nonground cloud");
+    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "nonground cloud");
+    
+    viewer->addPointCloud<pcl::PointXYZRGB>(cloud4lane, "lane cloud");
+    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "lane cloud");
+
     viewer->addCoordinateSystem(1.0);
     viewer->initCameraParameters();
     

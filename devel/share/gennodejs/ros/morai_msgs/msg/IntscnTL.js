@@ -84,7 +84,7 @@ class IntscnTL {
     let length = 0;
     length += std_msgs.msg.Header.getMessageSize(object.header);
     object.idx.forEach((val) => {
-      length += 4 + _getByteLength(val);
+      length += 4 + val.length;
     });
     length += 4 * object.state.length;
     length += 4 * object.delta_time.length;

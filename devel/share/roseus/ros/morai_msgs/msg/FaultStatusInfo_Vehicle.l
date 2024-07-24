@@ -22,7 +22,7 @@
     ((:accel __accel) (instance morai_msgs::FaultStatusInfo_Overall :init))
     ((:brake __brake) (instance morai_msgs::FaultStatusInfo_Overall :init))
     ((:steer __steer) (instance morai_msgs::FaultStatusInfo_Overall :init))
-    ((:tires __tires) ())
+    ((:tires __tires) (let (r) (dotimes (i 0) (push (instance morai_msgs::FaultStatusInfo_Overall :init) r)) r))
     )
    (send-super :init)
    (setq _accel __accel)

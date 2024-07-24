@@ -52,17 +52,17 @@
    (&optional __cmd_type)
    (if __cmd_type (setq _cmd_type __cmd_type)) _cmd_type)
   (:Forward_input
-   (&optional (__Forward_input :null))
-   (if (not (eq __Forward_input :null)) (setq _Forward_input __Forward_input)) _Forward_input)
+   (&optional __Forward_input)
+   (if __Forward_input (setq _Forward_input __Forward_input)) _Forward_input)
   (:Backward_input
-   (&optional (__Backward_input :null))
-   (if (not (eq __Backward_input :null)) (setq _Backward_input __Backward_input)) _Backward_input)
+   (&optional __Backward_input)
+   (if __Backward_input (setq _Backward_input __Backward_input)) _Backward_input)
   (:Left_Turn_input
-   (&optional (__Left_Turn_input :null))
-   (if (not (eq __Left_Turn_input :null)) (setq _Left_Turn_input __Left_Turn_input)) _Left_Turn_input)
+   (&optional __Left_Turn_input)
+   (if __Left_Turn_input (setq _Left_Turn_input __Left_Turn_input)) _Left_Turn_input)
   (:Right_Turn_input
-   (&optional (__Right_Turn_input :null))
-   (if (not (eq __Right_Turn_input :null)) (setq _Right_Turn_input __Right_Turn_input)) _Right_Turn_input)
+   (&optional __Right_Turn_input)
+   (if __Right_Turn_input (setq _Right_Turn_input __Right_Turn_input)) _Right_Turn_input)
   (:left_front_wheel_rpm
    (&optional __left_front_wheel_rpm)
    (if __left_front_wheel_rpm (setq _left_front_wheel_rpm __left_front_wheel_rpm)) _left_front_wheel_rpm)

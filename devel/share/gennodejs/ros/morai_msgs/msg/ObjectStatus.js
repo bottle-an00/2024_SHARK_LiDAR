@@ -126,7 +126,7 @@ class ObjectStatus {
 
   static getMessageSize(object) {
     let length = 0;
-    length += _getByteLength(object.name);
+    length += object.name.length;
     return length + 116;
   }
 

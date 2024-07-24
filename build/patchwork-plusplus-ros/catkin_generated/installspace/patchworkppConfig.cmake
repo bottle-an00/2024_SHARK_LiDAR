@@ -154,7 +154,7 @@ foreach(library ${libraries})
     set(lib_path "")
     set(lib "${library}-NOTFOUND")
     # since the path where the library is found is returned we have to iterate over the paths manually
-    foreach(path /home/jba/2024_SHARK_LiDAR/install/lib;/opt/ros/noetic/lib)
+    foreach(path /home/jba/2024_SHARK_LiDAR/install/lib;/home/jba/ydlidar_ws/devel/lib;/home/jba/jba_ws/devel/lib;/opt/ros/melodic/lib)
       find_library(lib ${library}
         PATHS ${path}
         NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
@@ -211,7 +211,7 @@ foreach(depend ${depends})
   _unpack_libraries_with_build_configuration(patchworkpp_LIBRARIES ${patchworkpp_LIBRARIES})
 
   _list_append_unique(patchworkpp_LIBRARY_DIRS ${${patchworkpp_dep}_LIBRARY_DIRS})
-  _list_append_deduplicate(patchworkpp_EXPORTED_TARGETS ${${patchworkpp_dep}_EXPORTED_TARGETS})
+  list(APPEND patchworkpp_EXPORTED_TARGETS ${${patchworkpp_dep}_EXPORTED_TARGETS})
 endforeach()
 
 set(pkg_cfg_extras "patchworkpp-msg-extras.cmake")

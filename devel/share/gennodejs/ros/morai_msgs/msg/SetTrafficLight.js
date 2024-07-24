@@ -59,7 +59,7 @@ class SetTrafficLight {
 
   static getMessageSize(object) {
     let length = 0;
-    length += _getByteLength(object.trafficLightIndex);
+    length += object.trafficLightIndex.length;
     return length + 6;
   }
 

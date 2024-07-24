@@ -33,11 +33,11 @@
    (setq _time (string __time))
    self)
   (:tick_status
-   (&optional (__tick_status :null))
-   (if (not (eq __tick_status :null)) (setq _tick_status __tick_status)) _tick_status)
+   (&optional __tick_status)
+   (if __tick_status (setq _tick_status __tick_status)) _tick_status)
   (:pause_status
-   (&optional (__pause_status :null))
-   (if (not (eq __pause_status :null)) (setq _pause_status __pause_status)) _pause_status)
+   (&optional __pause_status)
+   (if __pause_status (setq _pause_status __pause_status)) _pause_status)
   (:frame
    (&optional __frame)
    (if __frame (setq _frame __frame)) _frame)

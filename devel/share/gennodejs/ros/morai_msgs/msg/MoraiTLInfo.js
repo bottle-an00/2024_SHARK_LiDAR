@@ -72,7 +72,7 @@ class MoraiTLInfo {
   static getMessageSize(object) {
     let length = 0;
     length += std_msgs.msg.Header.getMessageSize(object.header);
-    length += _getByteLength(object.idx);
+    length += object.idx.length;
     return length + 6;
   }
 

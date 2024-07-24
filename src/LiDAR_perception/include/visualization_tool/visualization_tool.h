@@ -291,6 +291,14 @@ public:
 
     //     }
     // }
+    
+    void nearestNInnerZone_visualization(visualization_msgs::MarkerArray& nearest_Inner_Lines, vector<Polygon>& nearestInners){
+        int id=0;
+        for(auto inner : nearestInners){
+            int inner_start =id;
+            getPolygonInfo(id,nearest_Inner_Lines,inner, inner_start, 0.0, 0.0, 1.0);
+        }
+    }
 
     void ROIzonevisualization(visualization_msgs::MarkerArray& RCA_Lines ,Polygon &outer, vector<Polygon>& Inners){
 
@@ -304,7 +312,7 @@ public:
         
     }
 
-    void getPolygonInfo(int& id, visualization_msgs::MarkerArray& RCA_Lines ,Polygon &zone, int start_num =0){
+    void getPolygonInfo(int& id, visualization_msgs::MarkerArray& RCA_Lines ,Polygon &zone, int start_num =0, float r = 1.0, float g = 1.0 ,float b = 0.0){
         geometry_msgs::Point first_points;
 
         for(vector<Point>::const_iterator iter = zone.vertices.begin();iter != zone.vertices.end();iter++){
@@ -319,8 +327,9 @@ public:
 
             line_strip.scale.x = 1.0;
 
-            line_strip.color.r = 1.0;
-            line_strip.color.g = 1.0;
+            line_strip.color.r = r;
+            line_strip.color.g = g;
+            line_strip.color.b = b;
             line_strip.color.a = 1.0;
 
             geometry_msgs::Point p;

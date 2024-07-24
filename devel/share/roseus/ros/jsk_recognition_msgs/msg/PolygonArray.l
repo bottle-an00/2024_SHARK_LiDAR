@@ -24,7 +24,7 @@
   (:init
    (&key
     ((:header __header) (instance std_msgs::Header :init))
-    ((:polygons __polygons) ())
+    ((:polygons __polygons) (let (r) (dotimes (i 0) (push (instance geometry_msgs::PolygonStamped :init) r)) r))
     ((:labels __labels) (make-array 0 :initial-element 0 :element-type :integer))
     ((:likelihood __likelihood) (make-array 0 :initial-element 0.0 :element-type :float))
     )

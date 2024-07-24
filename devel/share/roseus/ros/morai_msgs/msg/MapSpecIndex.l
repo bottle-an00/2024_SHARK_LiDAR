@@ -25,8 +25,8 @@
    (setq _load_map_data __load_map_data)
    self)
   (:load_map_data
-   (&optional (__load_map_data :null))
-   (if (not (eq __load_map_data :null)) (setq _load_map_data __load_map_data)) _load_map_data)
+   (&optional __load_map_data)
+   (if __load_map_data (setq _load_map_data __load_map_data)) _load_map_data)
   (:serialization-length
    ()
    (+

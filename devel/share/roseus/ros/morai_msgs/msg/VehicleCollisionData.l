@@ -22,7 +22,7 @@
   (:init
    (&key
     ((:header __header) (instance std_msgs::Header :init))
-    ((:collisions __collisions) ())
+    ((:collisions __collisions) (let (r) (dotimes (i 0) (push (instance morai_msgs::VehicleCollision :init) r)) r))
     )
    (send-super :init)
    (setq _header __header)

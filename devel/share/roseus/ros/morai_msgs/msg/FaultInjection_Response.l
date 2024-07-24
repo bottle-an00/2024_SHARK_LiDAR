@@ -22,7 +22,7 @@
     ((:result __result) nil)
     ((:unique_id __unique_id) 0)
     ((:vehicle __vehicle) (instance morai_msgs::FaultStatusInfo_Vehicle :init))
-    ((:sensors __sensors) ())
+    ((:sensors __sensors) (let (r) (dotimes (i 0) (push (instance morai_msgs::FaultStatusInfo_Sensor :init) r)) r))
     )
    (send-super :init)
    (setq _result __result)
@@ -31,8 +31,8 @@
    (setq _sensors __sensors)
    self)
   (:result
-   (&optional (__result :null))
-   (if (not (eq __result :null)) (setq _result __result)) _result)
+   (&optional __result)
+   (if __result (setq _result __result)) _result)
   (:unique_id
    (&optional __unique_id)
    (if __unique_id (setq _unique_id __unique_id)) _unique_id)

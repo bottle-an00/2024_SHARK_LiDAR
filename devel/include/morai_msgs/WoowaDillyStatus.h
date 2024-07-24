@@ -94,16 +94,6 @@ namespace message_traits
 
 
 template <class ContainerAllocator>
-struct IsMessage< ::morai_msgs::WoowaDillyStatus_<ContainerAllocator> >
-  : TrueType
-  { };
-
-template <class ContainerAllocator>
-struct IsMessage< ::morai_msgs::WoowaDillyStatus_<ContainerAllocator> const>
-  : TrueType
-  { };
-
-template <class ContainerAllocator>
 struct IsFixedSize< ::morai_msgs::WoowaDillyStatus_<ContainerAllocator> >
   : FalseType
   { };
@@ -111,6 +101,16 @@ struct IsFixedSize< ::morai_msgs::WoowaDillyStatus_<ContainerAllocator> >
 template <class ContainerAllocator>
 struct IsFixedSize< ::morai_msgs::WoowaDillyStatus_<ContainerAllocator> const>
   : FalseType
+  { };
+
+template <class ContainerAllocator>
+struct IsMessage< ::morai_msgs::WoowaDillyStatus_<ContainerAllocator> >
+  : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsMessage< ::morai_msgs::WoowaDillyStatus_<ContainerAllocator> const>
+  : TrueType
   { };
 
 template <class ContainerAllocator>

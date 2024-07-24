@@ -19,46 +19,33 @@ private:
     message_filters::Subscriber<geometry_msgs::PoseStamped> subLocal;
     boost::shared_ptr<Sync> sync;
     
-    ros::Publisher pubConeCloud; // 도로에 해당하는 point cloud 중 차량의 최소회전 반경을  고려한 point cloud
-    ros::Publisher pubConesCenter;
-    ros::Publisher pubConesBoundary;
-    ros::Publisher pubROICloud;
+    ros::Publisher pubROICloud; // 도로에 해당하는 point cloud 중 차량의 최소회전 반경을  고려한 point cloud
+    ros::Publisher pubObjCenter;
+    ros::Publisher pubObjBoundary;
     ros::Publisher pubVector;
-    ros::Publisher pub_prev_cone;
-    ros::Publisher pubConesCenterKF;
-    ros::Publisher pub_local;
     ros::Publisher pubOuter;
+    ros::Publisher pubNearestInner;
 
     pcl::PointCloud<PointType>::Ptr groundCloudIn;// patchwork++에 의해 들어온 ground cloud를 저장
     pcl::PointCloud<PointType>::Ptr nongroundCloudIn;// patchwork++에 의해 들어온  non ground cloud를 저장
 
-    vector<pcl::PointCloud<PointType>::Ptr> ConeCandidateCloud[2];// 콘 후보군 cloud
-    pcl::PointCloud<PointType>::Ptr ConeCloud;// 콘에 해당하는 cloud
-    pcl::PointCloud<PointType>::Ptr prev_ConeCloud;// 콘에 해당하는 cloud
-    FixedSizeQueue<pcl::PointCloud<PointType>::Ptr>prev_ConeCloud_que;// 콘에 해당하는 cloud
+    vector<pcl::PointCloud<PointType>::Ptr> ObjCandidateCloud[2];
+
     pcl::PointCloud<PointType>::Ptr Clustered_Cloud;// 클러스터링된 cloud
     pcl::PointCloud<PointType>::Ptr ROICloud;// 클러스터링된 cloud중 z값이 0 이하인 점들만 남김
 
-    visualization_msgs::MarkerArray cone_boundary_markerarray;    
-    visualization_msgs::MarkerArray cone_center_markerarray;    
-    visualization_msgs::MarkerArray cone_center_markerarrayKF;    
+    visualization_msgs::MarkerArray obj_boundary_markerarray;    
+    visualization_msgs::MarkerArray obj_center_markerarray;    
     visualization_msgs::MarkerArray normal_vectors;    
     visualization_msgs::MarkerArray outer_zone;    
+    visualization_msgs::MarkerArray nearest_inner_zone;    
+
     vector<Object_info> obj_center_point;
     vector<PointType> lastest_cones;
 
     std_msgs::Header cloudHeader;
     pcl::KdTreeFLANN<PointType> Ground_kdtree;
     
-    tf::StampedTransform MappedTrans;
-    tf::TransformBroadcaster tfBroadcaster;
-
-    tf::StampedTransform map_2_camera_init_Trans;
-    tf::TransformBroadcaster tfBroadcasterMap2CameraInit;
-
-    tf::StampedTransform camera_2_base_link_Trans;
-    tf::TransformBroadcaster tfBroadcasterCamera2Baselink;
-
     Ego_status ego_info;
     
     vector<FusionEKF> EKFs;
@@ -74,6 +61,7 @@ private:
     Polygon outer; 
 
     vector<Polygon> inners;
+    vector<Polygon> near_ego_inners;
 
     int cone_id=0;
     int count =0;
@@ -90,17 +78,14 @@ public:
         sync.reset(new Sync(MySyncPolicy(50), subNonGroundCloud, subGroundCloud, subLocal));
         sync->registerCallback(boost::bind(&Object_Detection::cloudHandler, this, _1, _2, _3));
 
-        pubConeCloud = nh.advertise<sensor_msgs::PointCloud2> ("/cone_cloud", 1);
-        pubROICloud = nh.advertise<sensor_msgs::PointCloud2> ("/ROI_cloud", 1); 
+        pubROICloud = nh.advertise<sensor_msgs::PointCloud2> ("/ROI_cloud", 1);
 
-        pubConesCenter = nh.advertise<visualization_msgs::MarkerArray>("/cone_center_markers", 1);
-        pubConesCenterKF = nh.advertise<visualization_msgs::MarkerArray>("/cone_center_markers_kf", 1);
-        pubConesBoundary = nh.advertise<visualization_msgs::MarkerArray>("/cone_BoundingBox", 1);
+        pubObjCenter = nh.advertise<visualization_msgs::MarkerArray>("/cone_center_markers", 1);
+        pubObjBoundary = nh.advertise<visualization_msgs::MarkerArray>("/cone_BoundingBox", 1);
         pubVector =  nh.advertise<visualization_msgs::MarkerArray>("/vectors", 1);
-        pub_local =  nh.advertise<geometry_msgs::PoseStamped>("/local_msgs_for_vision_sub", 1);
+        
         pubOuter  =  nh.advertise<visualization_msgs::MarkerArray>("/outer_zone", 1);
-
-        pub_prev_cone = nh.advertise<sensor_msgs::PointCloud2> ("/prev_conecloud", 1); 
+        pubNearestInner =  nh.advertise<visualization_msgs::MarkerArray>("/nearest_Inner_zone", 1);
 
         allocateMemory();
         resetParameters();
@@ -110,10 +95,9 @@ public:
 
         groundCloudIn.reset(new pcl::PointCloud<PointType>());
         nongroundCloudIn.reset(new pcl::PointCloud<PointType>());
-        ConeCloud.reset(new pcl::PointCloud<PointType>());
-        prev_ConeCloud.reset(new pcl::PointCloud<PointType>());
-        Clustered_Cloud.reset(new pcl::PointCloud<PointType>());
         ROICloud.reset(new pcl::PointCloud<PointType>());
+
+        Clustered_Cloud.reset(new pcl::PointCloud<PointType>());
         
         pred_position.resize(1000, Eigen::VectorXd::Zero(4));
         measurement_pack_list.resize(1000);
@@ -122,11 +106,11 @@ public:
 
         lastest_cones.resize(10000);
 
-        cone_boundary_markerarray.markers.clear();
-        cone_center_markerarray.markers.clear();
-        cone_center_markerarrayKF.markers.clear();
+        obj_center_markerarray.markers.clear();
+        obj_boundary_markerarray.markers.clear();
         normal_vectors.markers.clear();
         outer_zone.markers.clear();
+        nearest_inner_zone.markers.clear();
 
         outer = RCA.readOuterPolygon();
         inners = RCA.readInnerPolygon();
@@ -137,21 +121,22 @@ public:
         nongroundCloudIn->clear();
         
         for(int i=0; i<2; i++)
-            ConeCandidateCloud[i].clear();
+            ObjCandidateCloud[i].clear();
 
         ROICloud->clear();
-        ConeCloud->clear();
-        prev_ConeCloud->clear();
 
         id_list.clear();
         obj_center_point.clear();
         Clustered_Cloud->clear();
         
-        cone_center_markerarray.markers.clear();
-        cone_center_markerarrayKF.markers.clear();
-        cone_boundary_markerarray.markers.clear();
+        obj_center_markerarray.markers.clear();
+        obj_boundary_markerarray.markers.clear();
         normal_vectors.markers.clear();
         outer_zone.markers.clear();
+        nearest_inner_zone.markers.clear();
+        
+        near_ego_inners.clear();
+
         count++;
     }
 
@@ -168,10 +153,6 @@ public:
         if(ego_info.is_initialize){ 
             ego_info.prev = ego_info.curr;
         }
-        geometry_msgs::PoseStamped data2;
-        data2  = *localMsg;
-        data2.pose.position.z = 0.0;
-        data2.header.frame_id = "map";
 
         ego_info.curr.x = localMsg->pose.position.x;
 
@@ -183,8 +164,6 @@ public:
 
         ego_info.yaw = localMsg->pose.orientation.z;
 
-        data2.pose.orientation =  tf::createQuaternionMsgFromRollPitchYaw(0.0, 0.0, ego_info.curr.z*PI/180);
-        pub_local.publish(data2);
         
     }
 
@@ -203,100 +182,37 @@ public:
     void cloudHandler(const boost::shared_ptr<const sensor_msgs::PointCloud2>& laserCloudMsg,
                     const boost::shared_ptr<const sensor_msgs::PointCloud2>& GroundlaserCloudMsg,
                     const boost::shared_ptr<const geometry_msgs::PoseStamped>& LocalMsg ){
-
+        //data processing
         groundcloudHandler(GroundlaserCloudMsg);
         
         localMsgHandler(LocalMsg);
-
-        ROS_INFO_STREAM("\033[1;32m" << "OD Working..."<< "\033[0m");
-        
-        auto start_time = std::chrono::high_resolution_clock::now();
         
         copyPointCloud(laserCloudMsg);
+        //
+        auto start_time = std::chrono::high_resolution_clock::now();
+        
+        //get ROICloud with RCA
+        near_ego_inners = RCA.get_nearest_N_inner_zone(6,inners,ego_info);
 
-        RCA_test();
+        RCA.set_ROI_RCA(nongroundCloudIn, ROICloud,outer,near_ego_inners,ego_info);
+        //
+
+        //Object Detection
+        clustering(ROICloud,ObjCandidateCloud[0], 1.0 , 20, 800);
         
-        clustering(nongroundCloudIn,ConeCandidateCloud[0], 1.0 , 20, 800);
+        set_ROI(ObjCandidateCloud[0]);
         
-        set_ROI(ConeCandidateCloud[0]);
-        
-        detect_object(ConeCandidateCloud[1]);
-        
+        detect_object(ObjCandidateCloud[1]);
+        //
+
         auto end_time = std::chrono::high_resolution_clock::now();
-
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
 
-        cout << "process time :: " << duration.count() << " ms" << endl;
-
-        Vt.visual_object_center(obj_center_point, cone_center_markerarray,cloudHeader.frame_id);
-
-        Vt.visual_cones_boundary(obj_center_point, cone_boundary_markerarray,cloudHeader.frame_id);
+        ROS_INFO_STREAM("\033[1;32m" << "OD Working... process time:: "<<duration.count() << " ms" <<  "\033[0m");
 
         publishCloud();
 
         resetParameters();
-    }
-
-    void RCA_test(){
-
-        pcl::PointCloud<PointType>::Ptr downsampled_cloud(new pcl::PointCloud<PointType>);
-        
-        pcl::VoxelGrid<PointType> sor;
-        sor.setInputCloud(nongroundCloudIn);  
-        sor.setLeafSize(0.3f, 0.3f, 0.15f);  
-        
-        sor.filter(*downsampled_cloud);
-
-
-        size_t cloud_size = downsampled_cloud->points.size();
-
-        for(int i = 0; i < cloud_size; i++){
-            downsampled_cloud->points[i].x -= 0.4;//gps와의 match를 위한 필수 조건
-        }
-        
-        *downsampled_cloud = *transformPointCloud(downsampled_cloud);
-
-        for(int i = 0; i < cloud_size; i++){    
-            Point p = {downsampled_cloud->points[i].x, downsampled_cloud->points[i].y}; 
-            
-            if(RCA.isInside(outer, inners, p)){
-                ConeCloud->push_back(downsampled_cloud->points[i]);
-            }
-        }
-        
-        Vt.ROIzonevisualization(outer_zone, outer,inners);
-    }
-
-    pcl::PointCloud<PointType>::Ptr transformPointCloud(pcl::PointCloud<PointType>::Ptr cloudIn){
-
-        pcl::PointCloud<PointType>::Ptr cloudOut(new pcl::PointCloud<PointType>());
-
-        PointType *pointFrom;
-        PointType pointTo;
-
-        int cloudSize = cloudIn->points.size();
-        cloudOut->resize(cloudSize);
-        
-        for (int i = 0; i < cloudSize; ++i){
-
-            pointFrom = &cloudIn->points[i];
-            float x1 = cos(ego_info.yaw) * pointFrom->x - sin(ego_info.yaw) * pointFrom->y;
-            float y1 = sin(ego_info.yaw) * pointFrom->x + cos(ego_info.yaw)* pointFrom->y;
-            float z1 = pointFrom->z;
-
-            float x2 = x1;
-            float y2 = cos(ego_info.roll) * y1 - sin(ego_info.roll) * z1;
-            float z2 = sin(ego_info.roll) * y1 + cos(ego_info.roll)* z1;
-
-            pointTo.x = cos(ego_info.pitch) * x2 + sin(ego_info.pitch) * z2 + ego_info.curr.x;
-            pointTo.y = y2 + ego_info.curr.y;
-            pointTo.z = -sin(ego_info.pitch) * x2 + cos(ego_info.pitch) * z2 + ego_info.curr.z;
-
-            pointTo.intensity = pointFrom->intensity;
-
-            cloudOut->points[i] = pointTo;
-        }
-        return cloudOut;
     }
 
     void detect_object(vector<pcl::PointCloud<PointType>::Ptr> input_cloud_vec){
@@ -345,11 +261,15 @@ public:
             }
 
             VectorXf cone_principle_vec = conduct_PCA((*iter),0);
-            Vt.visual_vector(c1,vector2point(cone_principle_vec,c1), 1.0, 1.0, 1.0,count,obj_center_point, normal_vectors,cloudHeader.frame_id);
-            Vt.visual_vector(c1,vector2point(ground_normal,c1), 0.0, 0.0,1.0,count+100,obj_center_point,normal_vectors,cloudHeader.frame_id);
+
+            if (pubVector.getNumSubscribers() != 0){
+                Vt.visual_vector(c1,vector2point(cone_principle_vec,c1), 1.0, 1.0, 1.0,count,obj_center_point, normal_vectors,"map");
+                Vt.visual_vector(c1,vector2point(ground_normal,c1), 0.0, 0.0,1.0,count+100,obj_center_point,normal_vectors,"map");
+                pubVector.publish(normal_vectors);
+            }
 
             double diff_angle = (acos(ground_normal.dot(cone_principle_vec)) /(magnitude(ground_normal)*magnitude(cone_principle_vec)))*180/PI;
-            //if(diff_angle < 70){
+            if(diff_angle < 85 || diff_angle > 95){
                
                 //clustered point의 최대 최소값
                 PointType maxPoint,minPoint;
@@ -361,81 +281,23 @@ public:
                 cone_info.mid_point = c1;
 
                 obj_center_point.push_back(cone_info); 
-            //}
+            }
 
             count++;
         }
     }
 
-    double cal_range(PointType point){
-        return sqrt(point.x*point.x + point.y*point.y + point.z*point.z);
-    }
-    double cal_diff(PointType point){
-        return sqrt(point.x*point.x + point.y*point.y);
-    }
-    double cal_diff(PointType saved_Cone , PointType detected_Cone){
-        double dx = saved_Cone.x - detected_Cone.x;
-        double dy = saved_Cone.y - detected_Cone.y; 
-        double dz = saved_Cone.z - detected_Cone.z;
-
-        return sqrt(dx*dx + dy*dy + dz*dz);
-    }
-
-    double magnitude(const VectorXf& v) {
-       return sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-    }
-
-    PointType vector2point(const VectorXf& v, PointType start_point){
-        PointType tmp_point;
-        tmp_point.x = v[0]+start_point.x;
-        tmp_point.y = v[1]+start_point.y;
-        tmp_point.z = v[2]+start_point.z;
-
-        return tmp_point;
-    } 
-     
-    VectorXf conduct_PCA (pcl::PointCloud<PointType>::Ptr input_cloud, int num){
-        //num = 0이면 주축(분산도가 가장 큰 방향의 벡터를 의미함) , num=2이면 분산도가 가장 작은 방향의 벡터를 의미함
-
-        //covariance matrix 생성
-        Eigen::Matrix3f cov_;
-        Eigen::Vector4f pc_mean_;
-        VectorXf normal_;
-        VectorXf singular_values_;
-
-        pcl::computeMeanAndCovarianceMatrix(*input_cloud, cov_, pc_mean_);
-        
-        Eigen::JacobiSVD<Eigen::MatrixXf> svd(cov_, Eigen::DecompositionOptions::ComputeFullU);
-        singular_values_ = svd.singularValues();
-        
-        // use the least singular vector as normal::PCA 수행
-        normal_ = (svd.matrixU().col(num));
-        if (normal_(2) < 0) { for(int i=0; i<3; i++) normal_(i) *= -1; }
-        
-        return normal_;// 법선 벡터를 추출
-    }
+    
 
     void set_ROI(vector<pcl::PointCloud<PointType>::Ptr> input_cloud_vec ){
         for (auto iter = input_cloud_vec.begin(); iter != input_cloud_vec.end(); ++iter){
-            bool is_obj = true;
 
-            size_t cloud_size = (*iter)->points.size();
-            
-            for(int i=0; i< cloud_size; i++){
-                if((*iter)->points[i].z > 2.5) { // 건물을 제외하는 용도
-                    is_obj = false;
-                    break;
-                }
-            }
+            PointType maxPoint,minPoint;
+            pcl::getMinMax3D(*(*iter), minPoint, maxPoint);
 
-            if(is_obj) {
-                PointType maxPoint,minPoint;
-                pcl::getMinMax3D(*(*iter), minPoint, maxPoint);
+            float tolerance = 4*cal_range(minPoint)*tan(40/32*PI/180);
+            clustering((*iter),ObjCandidateCloud[1], tolerance , 10, 500);
 
-                float tolerance = 4*cal_range(minPoint)*tan(40/32*PI/180);
-                clustering((*iter),ConeCandidateCloud[1], tolerance , 10, 500);
-
-            }
         }
     }
     
@@ -492,35 +354,32 @@ public:
         // 2. Publish clouds
         sensor_msgs::PointCloud2 laserCloudTemp;
 
-        if (pubConeCloud.getNumSubscribers() != 0){
-            pcl::toROSMsg(*ConeCloud, laserCloudTemp);
+        if (pubROICloud.getNumSubscribers() != 0){
+            pcl::toROSMsg(*ROICloud, laserCloudTemp);
             laserCloudTemp.header.stamp = cloudHeader.stamp;
             laserCloudTemp.header.frame_id ="map";
-            pubConeCloud.publish(laserCloudTemp);
-        }
-
-        if (pubROICloud.getNumSubscribers() != 0){
-            pcl::toROSMsg(*Clustered_Cloud, laserCloudTemp);
-            laserCloudTemp.header.stamp = cloudHeader.stamp;
-            laserCloudTemp.header.frame_id = cloudHeader.frame_id;
             pubROICloud.publish(laserCloudTemp);
         }
 
-        if (pub_prev_cone.getNumSubscribers() != 0){
-            pcl::toROSMsg(*prev_ConeCloud, laserCloudTemp);
-            laserCloudTemp.header.stamp = cloudHeader.stamp;
-            laserCloudTemp.header.frame_id = cloudHeader.frame_id;
-            pub_prev_cone.publish(laserCloudTemp);
+        if (pubOuter.getNumSubscribers() != 0){
+            Vt.ROIzonevisualization(outer_zone, outer,inners);
+            pubOuter.publish(outer_zone);
         }
 
-        
-        pubConesCenter.publish(cone_center_markerarray);
-        pubConesCenterKF.publish(cone_center_markerarrayKF);
-        pubConesBoundary.publish(cone_boundary_markerarray);
-        pubVector.publish(normal_vectors);
-        pubOuter.publish(outer_zone);
-    }
+        if (pubObjCenter.getNumSubscribers() != 0){
+            Vt.visual_object_center(obj_center_point, obj_center_markerarray,"map");
+            pubObjCenter.publish(obj_center_markerarray);
+        }
 
+        if (pubObjBoundary.getNumSubscribers() != 0){
+            Vt.visual_cones_boundary(obj_center_point, obj_boundary_markerarray,"map");
+            pubObjBoundary.publish(obj_boundary_markerarray);
+        }
+        if(pubNearestInner.getNumSubscribers() != 0){
+            Vt.nearestNInnerZone_visualization(nearest_inner_zone,near_ego_inners);
+            pubNearestInner.publish(nearest_inner_zone);
+        }
+    }
     
 };
 

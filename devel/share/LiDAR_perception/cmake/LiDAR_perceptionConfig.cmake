@@ -154,7 +154,7 @@ foreach(library ${libraries})
     set(lib_path "")
     set(lib "${library}-NOTFOUND")
     # since the path where the library is found is returned we have to iterate over the paths manually
-    foreach(path /home/jba/2024_SHARK_LiDAR/devel/lib;/opt/ros/noetic/lib)
+    foreach(path /home/jba/2024_SHARK_LiDAR/devel/lib;/home/jba/ydlidar_ws/devel/lib;/home/jba/jba_ws/devel/lib;/opt/ros/melodic/lib)
       find_library(lib ${library}
         PATHS ${path}
         NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
@@ -211,7 +211,7 @@ foreach(depend ${depends})
   _unpack_libraries_with_build_configuration(LiDAR_perception_LIBRARIES ${LiDAR_perception_LIBRARIES})
 
   _list_append_unique(LiDAR_perception_LIBRARY_DIRS ${${LiDAR_perception_dep}_LIBRARY_DIRS})
-  _list_append_deduplicate(LiDAR_perception_EXPORTED_TARGETS ${${LiDAR_perception_dep}_EXPORTED_TARGETS})
+  list(APPEND LiDAR_perception_EXPORTED_TARGETS ${${LiDAR_perception_dep}_EXPORTED_TARGETS})
 endforeach()
 
 set(pkg_cfg_extras "")

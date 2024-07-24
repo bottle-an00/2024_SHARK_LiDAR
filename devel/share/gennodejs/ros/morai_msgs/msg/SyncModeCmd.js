@@ -70,7 +70,7 @@ class SyncModeCmd {
 
   static getMessageSize(object) {
     let length = 0;
-    length += _getByteLength(object.user_id);
+    length += object.user_id.length;
     return length + 9;
   }
 

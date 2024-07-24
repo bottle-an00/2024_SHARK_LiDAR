@@ -127,16 +127,6 @@ namespace message_traits
 
 
 template <class ContainerAllocator>
-struct IsMessage< ::morai_msgs::ObjectStatusListExtended_<ContainerAllocator> >
-  : TrueType
-  { };
-
-template <class ContainerAllocator>
-struct IsMessage< ::morai_msgs::ObjectStatusListExtended_<ContainerAllocator> const>
-  : TrueType
-  { };
-
-template <class ContainerAllocator>
 struct IsFixedSize< ::morai_msgs::ObjectStatusListExtended_<ContainerAllocator> >
   : FalseType
   { };
@@ -144,6 +134,16 @@ struct IsFixedSize< ::morai_msgs::ObjectStatusListExtended_<ContainerAllocator> 
 template <class ContainerAllocator>
 struct IsFixedSize< ::morai_msgs::ObjectStatusListExtended_<ContainerAllocator> const>
   : FalseType
+  { };
+
+template <class ContainerAllocator>
+struct IsMessage< ::morai_msgs::ObjectStatusListExtended_<ContainerAllocator> >
+  : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsMessage< ::morai_msgs::ObjectStatusListExtended_<ContainerAllocator> const>
+  : TrueType
   { };
 
 template <class ContainerAllocator>

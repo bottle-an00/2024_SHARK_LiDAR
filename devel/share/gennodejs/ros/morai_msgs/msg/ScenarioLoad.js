@@ -125,7 +125,7 @@ class ScenarioLoad {
 
   static getMessageSize(object) {
     let length = 0;
-    length += _getByteLength(object.file_name);
+    length += object.file_name.length;
     return length + 11;
   }
 

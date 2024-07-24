@@ -4,6 +4,8 @@
 #include <iostream>
 #include <vector>
 #include <boost/filesystem.hpp>
+#include "perception/data_struction.h"
+#include <map>
 
 namespace fs = boost::filesystem;
 
@@ -156,6 +158,82 @@ public:
         }
 
         return true;
+    }
+    
+    vector<Polygon> get_nearest_N_inner_zone(int N, vector<Polygon>& inners, Ego_status& ego_info){
+        map<double,Polygon> inner_zone_info;
+
+        vector<Polygon> output;
+
+        for(auto inner :inners){//각각의 inner zone에 현재 위치에 가장 가까운 점까지의 거리를 추출
+            map<double,Point> nearest4points_per_inner_zone;
+            
+            double dst_sum;
+
+            for(auto point : inner.vertices){
+
+                double dst = sqrt((point.x - ego_info.curr.x)*(point.x - ego_info.curr.x) 
+                    + (point.y - ego_info.curr.y)*(point.y - ego_info.curr.y));
+                
+                nearest4points_per_inner_zone[dst] = point;
+            }
+
+            auto iter = nearest4points_per_inner_zone.begin();
+
+            dst_sum = iter->first;
+            
+            inner_zone_info[dst_sum] = inner;
+        }
+        
+        auto iter = inner_zone_info.begin();
+
+        for(int i =0; i< N; i++){
+
+            if(iter == inner_zone_info.end()) {
+                cout << "N over Inner zone number" << endl;
+                return output;
+            }
+            output.push_back(iter->second);
+            ++iter;
+
+        }
+
+        return output;
+    }
+
+
+    void set_ROI_RCA(pcl::PointCloud<PointType>::Ptr input_cloud, pcl::PointCloud<PointType>::Ptr output_cloud, Polygon& outer, vector<Polygon>& inners, Ego_status& ego_info){
+
+        pcl::PointCloud<PointType>::Ptr downsampled_cloud(new pcl::PointCloud<PointType>);
+        pcl::PointCloud<PointType>::Ptr near_ego_cloud(new pcl::PointCloud<PointType>);
+        
+        pcl::VoxelGrid<PointType> sor;
+        sor.setInputCloud(input_cloud);  
+        sor.setLeafSize(0.3f, 0.3f, 0.15f);  
+        
+        sor.filter(*downsampled_cloud);
+
+
+        size_t cloud_size = downsampled_cloud->points.size();
+
+        for(int i = 0; i < cloud_size; i++){
+            if(downsampled_cloud->points[i].z < 0.1 && cal_range(downsampled_cloud->points[i]) < 40 && cal_range(downsampled_cloud->points[i]) > 1.5){
+                downsampled_cloud->points[i].x -= 0.4;//gps와의 match를 위한 필수 조건
+                near_ego_cloud->push_back(downsampled_cloud->points[i]);
+            }
+        }
+        
+        *near_ego_cloud = *transformPointCloud(near_ego_cloud,ego_info);
+
+        cloud_size = near_ego_cloud->points.size();
+
+        for(int i = 0; i < cloud_size; i++){    
+            Point p = {near_ego_cloud->points[i].x, near_ego_cloud->points[i].y}; 
+            
+            if(isInside(outer, inners, p)){
+                output_cloud->push_back(near_ego_cloud->points[i]);
+            }
+        }
     }
 };
 

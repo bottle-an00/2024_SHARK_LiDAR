@@ -95,16 +95,6 @@ namespace message_traits
 
 
 template <class ContainerAllocator>
-struct IsMessage< ::morai_msgs::NpcGhostCmd_<ContainerAllocator> >
-  : TrueType
-  { };
-
-template <class ContainerAllocator>
-struct IsMessage< ::morai_msgs::NpcGhostCmd_<ContainerAllocator> const>
-  : TrueType
-  { };
-
-template <class ContainerAllocator>
 struct IsFixedSize< ::morai_msgs::NpcGhostCmd_<ContainerAllocator> >
   : FalseType
   { };
@@ -112,6 +102,16 @@ struct IsFixedSize< ::morai_msgs::NpcGhostCmd_<ContainerAllocator> >
 template <class ContainerAllocator>
 struct IsFixedSize< ::morai_msgs::NpcGhostCmd_<ContainerAllocator> const>
   : FalseType
+  { };
+
+template <class ContainerAllocator>
+struct IsMessage< ::morai_msgs::NpcGhostCmd_<ContainerAllocator> >
+  : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsMessage< ::morai_msgs::NpcGhostCmd_<ContainerAllocator> const>
+  : TrueType
   { };
 
 template <class ContainerAllocator>

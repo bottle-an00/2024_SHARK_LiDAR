@@ -48,7 +48,7 @@ class MoraiTLIndex {
 
   static getMessageSize(object) {
     let length = 0;
-    length += _getByteLength(object.idx);
+    length += object.idx.length;
     return length + 4;
   }
 

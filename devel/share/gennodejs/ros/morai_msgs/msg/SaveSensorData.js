@@ -70,8 +70,8 @@ class SaveSensorData {
 
   static getMessageSize(object) {
     let length = 0;
-    length += _getByteLength(object.custom_file_name);
-    length += _getByteLength(object.file_dir);
+    length += object.custom_file_name.length;
+    length += object.file_dir.length;
     return length + 9;
   }
 

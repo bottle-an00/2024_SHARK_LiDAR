@@ -42,26 +42,26 @@
    (&optional __file_name)
    (if __file_name (setq _file_name __file_name)) _file_name)
   (:load_network_connection_data
-   (&optional (__load_network_connection_data :null))
-   (if (not (eq __load_network_connection_data :null)) (setq _load_network_connection_data __load_network_connection_data)) _load_network_connection_data)
+   (&optional __load_network_connection_data)
+   (if __load_network_connection_data (setq _load_network_connection_data __load_network_connection_data)) _load_network_connection_data)
   (:delete_all
-   (&optional (__delete_all :null))
-   (if (not (eq __delete_all :null)) (setq _delete_all __delete_all)) _delete_all)
+   (&optional __delete_all)
+   (if __delete_all (setq _delete_all __delete_all)) _delete_all)
   (:load_ego_vehicle_data
-   (&optional (__load_ego_vehicle_data :null))
-   (if (not (eq __load_ego_vehicle_data :null)) (setq _load_ego_vehicle_data __load_ego_vehicle_data)) _load_ego_vehicle_data)
+   (&optional __load_ego_vehicle_data)
+   (if __load_ego_vehicle_data (setq _load_ego_vehicle_data __load_ego_vehicle_data)) _load_ego_vehicle_data)
   (:load_surrounding_vehicle_data
-   (&optional (__load_surrounding_vehicle_data :null))
-   (if (not (eq __load_surrounding_vehicle_data :null)) (setq _load_surrounding_vehicle_data __load_surrounding_vehicle_data)) _load_surrounding_vehicle_data)
+   (&optional __load_surrounding_vehicle_data)
+   (if __load_surrounding_vehicle_data (setq _load_surrounding_vehicle_data __load_surrounding_vehicle_data)) _load_surrounding_vehicle_data)
   (:load_pedestrian_data
-   (&optional (__load_pedestrian_data :null))
-   (if (not (eq __load_pedestrian_data :null)) (setq _load_pedestrian_data __load_pedestrian_data)) _load_pedestrian_data)
+   (&optional __load_pedestrian_data)
+   (if __load_pedestrian_data (setq _load_pedestrian_data __load_pedestrian_data)) _load_pedestrian_data)
   (:load_obstacle_data
-   (&optional (__load_obstacle_data :null))
-   (if (not (eq __load_obstacle_data :null)) (setq _load_obstacle_data __load_obstacle_data)) _load_obstacle_data)
+   (&optional __load_obstacle_data)
+   (if __load_obstacle_data (setq _load_obstacle_data __load_obstacle_data)) _load_obstacle_data)
   (:set_pause
-   (&optional (__set_pause :null))
-   (if (not (eq __set_pause :null)) (setq _set_pause __set_pause)) _set_pause)
+   (&optional __set_pause)
+   (if __set_pause (setq _set_pause __set_pause)) _set_pause)
   (:serialization-length
    ()
    (+

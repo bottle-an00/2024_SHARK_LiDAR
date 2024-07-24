@@ -120,16 +120,6 @@ namespace message_traits
 
 
 template <class ContainerAllocator>
-struct IsMessage< ::morai_msgs::CollisionData_<ContainerAllocator> >
-  : TrueType
-  { };
-
-template <class ContainerAllocator>
-struct IsMessage< ::morai_msgs::CollisionData_<ContainerAllocator> const>
-  : TrueType
-  { };
-
-template <class ContainerAllocator>
 struct IsFixedSize< ::morai_msgs::CollisionData_<ContainerAllocator> >
   : FalseType
   { };
@@ -137,6 +127,16 @@ struct IsFixedSize< ::morai_msgs::CollisionData_<ContainerAllocator> >
 template <class ContainerAllocator>
 struct IsFixedSize< ::morai_msgs::CollisionData_<ContainerAllocator> const>
   : FalseType
+  { };
+
+template <class ContainerAllocator>
+struct IsMessage< ::morai_msgs::CollisionData_<ContainerAllocator> >
+  : TrueType
+  { };
+
+template <class ContainerAllocator>
+struct IsMessage< ::morai_msgs::CollisionData_<ContainerAllocator> const>
+  : TrueType
   { };
 
 template <class ContainerAllocator>

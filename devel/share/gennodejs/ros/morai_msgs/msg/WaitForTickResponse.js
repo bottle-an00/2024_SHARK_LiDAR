@@ -94,7 +94,7 @@ class WaitForTickResponse {
   static getMessageSize(object) {
     let length = 0;
     length += EgoVehicleStatus.getMessageSize(object.vehicle_status);
-    length += _getByteLength(object.time);
+    length += object.time.length;
     return length + 14;
   }
 

@@ -32,8 +32,8 @@
    (&optional __user_id)
    (if __user_id (setq _user_id __user_id)) _user_id)
   (:start_sync_mode
-   (&optional (__start_sync_mode :null))
-   (if (not (eq __start_sync_mode :null)) (setq _start_sync_mode __start_sync_mode)) _start_sync_mode)
+   (&optional __start_sync_mode)
+   (if __start_sync_mode (setq _start_sync_mode __start_sync_mode)) _start_sync_mode)
   (:time_step
    (&optional __time_step)
    (if __time_step (setq _time_step __time_step)) _time_step)
