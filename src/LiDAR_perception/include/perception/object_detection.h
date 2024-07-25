@@ -19,7 +19,8 @@ private:
     message_filters::Subscriber<geometry_msgs::PoseStamped> subLocal;
     boost::shared_ptr<Sync> sync;
     
-    ros::Publisher pubROICloud; // 도로에 해당하는 point cloud 중 차량의 최소회전 반경을  고려한 point cloud
+    ros::Publisher pubROICloud; 
+    ros::Publisher pubClusteredCloud; 
     ros::Publisher pubObjCenter;
     ros::Publisher pubObjBoundary;
     ros::Publisher pubVector;
@@ -79,6 +80,7 @@ public:
         sync->registerCallback(boost::bind(&Object_Detection::cloudHandler, this, _1, _2, _3));
 
         pubROICloud = nh.advertise<sensor_msgs::PointCloud2> ("/ROI_cloud", 1);
+        pubClusteredCloud = nh.advertise<sensor_msgs::PointCloud2> ("/Clustered_cloud", 1);
 
         pubObjCenter = nh.advertise<visualization_msgs::MarkerArray>("/cone_center_markers", 1);
         pubObjBoundary = nh.advertise<visualization_msgs::MarkerArray>("/cone_BoundingBox", 1);
@@ -145,6 +147,7 @@ public:
     void groundcloudHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg){
         
         pcl::fromROSMsg(*laserCloudMsg, *groundCloudIn);
+        *groundCloudIn  = *transformPointCloud(groundCloudIn,ego_info);
 
         Ground_kdtree.setInputCloud(groundCloudIn);
     }
@@ -183,10 +186,10 @@ public:
                     const boost::shared_ptr<const sensor_msgs::PointCloud2>& GroundlaserCloudMsg,
                     const boost::shared_ptr<const geometry_msgs::PoseStamped>& LocalMsg ){
         //data processing
-        groundcloudHandler(GroundlaserCloudMsg);
-        
         localMsgHandler(LocalMsg);
-        
+
+        groundcloudHandler(GroundlaserCloudMsg);
+
         copyPointCloud(laserCloudMsg);
         //
         auto start_time = std::chrono::high_resolution_clock::now();
@@ -198,9 +201,9 @@ public:
         //
 
         //Object Detection
-        clustering(ROICloud,ObjCandidateCloud[0], 1.0 , 20, 800);
+        clustering(ROICloud,ObjCandidateCloud[0], 1.0 , 5, 2000);
         
-        set_ROI(ObjCandidateCloud[0]);
+        Adaptive_Clustering(ObjCandidateCloud[0]);
         
         detect_object(ObjCandidateCloud[1]);
         //
@@ -217,12 +220,12 @@ public:
 
     void detect_object(vector<pcl::PointCloud<PointType>::Ptr> input_cloud_vec){
         int count =0;
+        bool is_obj = true;
 
         for (auto iter = input_cloud_vec.begin(); iter != input_cloud_vec.end(); ++iter){
             pcl::CentroidPoint<PointType> centroid;
 
             size_t cloud_size = (*iter)->points.size();
-            
             
             for(int i=0; i< cloud_size; i++){
                 PointType thispoint = (*iter)->points[i];
@@ -232,44 +235,44 @@ public:
             PointType c1;
             centroid.get(c1);
 
-            // kd-tree를 활용해 중심점의 2m 반경 내의 지면 PC를 추출
-            std::vector<int> indices;
-            std::vector<float> distances;
-            pcl::PointCloud<PointType>::Ptr tmp_ground(new pcl::PointCloud<PointType>);
+            if(c1.z < -1.2){
+                // kd-tree를 활용해 중심점의 2m 반경 내의 지면 PC를 추출
+                std::vector<int> indices;
+                std::vector<float> distances;
+                pcl::PointCloud<PointType>::Ptr tmp_ground(new pcl::PointCloud<PointType>);
 
-            float ground_min_z = 0.0; //우선 센서 높이를 기본값으로 설정
 
-            if(Ground_kdtree.radiusSearch(c1,2.0,indices, distances) > 0){
-                int count = 0;
+                if(Ground_kdtree.radiusSearch(c1, 4.0,indices, distances) > 0){
+                    int count = 0;
 
-                for (size_t j = 0; j < indices.size(); ++j) {
-
-                    if(ground_min_z >  groundCloudIn->points[indices[j]].z){
-                        ground_min_z = groundCloudIn->points[indices[j]].z;
+                    for (size_t j = 0; j < indices.size(); ++j) {
+                        tmp_ground->push_back(groundCloudIn->points[indices[j]]);
                     }
-                    
-                    tmp_ground->push_back(groundCloudIn->points[indices[j]]);
+
                 }
 
-            }
-             
-            // 지면 일부분 point cloud에서 얻은 법선 벡터와 콘의 주축 벡터를 활용해 각도를 계산
-            VectorXf ground_normal(3,1);
-            if(tmp_ground->points.size() > 20) ground_normal = conduct_PCA(tmp_ground,2);
-            else {
-                ground_normal[0] =0;ground_normal[1] =0;ground_normal[2] =1;
+                // 지면 일부분 point cloud에서 얻은 법선 벡터와 콘의 주축 벡터를 활용해 각도를 계산
+                VectorXf ground_normal(3,1);
+                
+                if(tmp_ground->points.size() > 20) ground_normal = conduct_PCA(tmp_ground,2);
+                else {
+                    ground_normal[0] =0;ground_normal[1] =0;ground_normal[2] =1;
+                }
+
+                VectorXf cone_principle_vec = conduct_PCA((*iter),0);
+
+                if (pubVector.getNumSubscribers() != 0){
+                    Vt.visual_vector(c1,vector2point(cone_principle_vec,c1), 1.0, 1.0, 1.0,count,obj_center_point, normal_vectors,"map");
+                    Vt.visual_vector(c1,vector2point(ground_normal,c1), 0.0, 0.0,1.0,count+100,obj_center_point,normal_vectors,"map");
+                    pubVector.publish(normal_vectors);
+                }
+
+                double diff_angle = (acos(ground_normal.dot(cone_principle_vec)) /(magnitude(ground_normal)*magnitude(cone_principle_vec)))*180/PI;
+                cout << diff_angle << endl << endl;
+                if (diff_angle > 75) is_obj = false;
             }
 
-            VectorXf cone_principle_vec = conduct_PCA((*iter),0);
-
-            if (pubVector.getNumSubscribers() != 0){
-                Vt.visual_vector(c1,vector2point(cone_principle_vec,c1), 1.0, 1.0, 1.0,count,obj_center_point, normal_vectors,"map");
-                Vt.visual_vector(c1,vector2point(ground_normal,c1), 0.0, 0.0,1.0,count+100,obj_center_point,normal_vectors,"map");
-                pubVector.publish(normal_vectors);
-            }
-
-            double diff_angle = (acos(ground_normal.dot(cone_principle_vec)) /(magnitude(ground_normal)*magnitude(cone_principle_vec)))*180/PI;
-            if(diff_angle < 85 || diff_angle > 95){
+            if(is_obj){
                
                 //clustered point의 최대 최소값
                 PointType maxPoint,minPoint;
@@ -279,6 +282,8 @@ public:
                 cone_info.max_point = maxPoint;
                 cone_info.min_point = minPoint;
                 cone_info.mid_point = c1;
+                
+                *Clustered_Cloud += *(*iter);
 
                 obj_center_point.push_back(cone_info); 
             }
@@ -287,16 +292,14 @@ public:
         }
     }
 
-    
-
-    void set_ROI(vector<pcl::PointCloud<PointType>::Ptr> input_cloud_vec ){
+    void Adaptive_Clustering(vector<pcl::PointCloud<PointType>::Ptr> input_cloud_vec ){
         for (auto iter = input_cloud_vec.begin(); iter != input_cloud_vec.end(); ++iter){
 
             PointType maxPoint,minPoint;
             pcl::getMinMax3D(*(*iter), minPoint, maxPoint);
 
             float tolerance = 4*cal_range(minPoint)*tan(40/32*PI/180);
-            clustering((*iter),ObjCandidateCloud[1], tolerance , 10, 500);
+            clustering((*iter),ObjCandidateCloud[1], tolerance , 5, 1500);
 
         }
     }
@@ -340,9 +343,9 @@ public:
                 }
                 clusternum++;
 
-                if(maxSize == 500){
-                   *Clustered_Cloud += *ClusterCloud;
-                }
+                // if(maxSize == 500){
+                //    *Clustered_Cloud += *ClusterCloud;
+                // }
                 output_cloud_vec.push_back(ClusterCloud);
             }       
         }
@@ -359,6 +362,13 @@ public:
             laserCloudTemp.header.stamp = cloudHeader.stamp;
             laserCloudTemp.header.frame_id ="map";
             pubROICloud.publish(laserCloudTemp);
+        }
+
+        if(pubClusteredCloud.getNumSubscribers() != 0){
+            pcl::toROSMsg(*Clustered_Cloud, laserCloudTemp);
+            laserCloudTemp.header.stamp = cloudHeader.stamp;
+            laserCloudTemp.header.frame_id ="map";
+            pubClusteredCloud.publish(laserCloudTemp);
         }
 
         if (pubOuter.getNumSubscribers() != 0){

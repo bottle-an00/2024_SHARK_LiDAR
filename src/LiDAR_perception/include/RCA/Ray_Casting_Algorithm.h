@@ -209,7 +209,7 @@ public:
         
         pcl::VoxelGrid<PointType> sor;
         sor.setInputCloud(input_cloud);  
-        sor.setLeafSize(0.3f, 0.3f, 0.15f);  
+        sor.setLeafSize(0.10f, 0.10f, 0.10f);  
         
         sor.filter(*downsampled_cloud);
 
@@ -217,9 +217,11 @@ public:
         size_t cloud_size = downsampled_cloud->points.size();
 
         for(int i = 0; i < cloud_size; i++){
-            if(downsampled_cloud->points[i].z < 0.1 && cal_range(downsampled_cloud->points[i]) < 40 && cal_range(downsampled_cloud->points[i]) > 1.5){
-                downsampled_cloud->points[i].x -= 0.4;//gps와의 match를 위한 필수 조건
-                near_ego_cloud->push_back(downsampled_cloud->points[i]);
+            if(downsampled_cloud->points[i].z < 0.1){
+                if(cal_range(downsampled_cloud->points[i]) < 40 && cal_range(downsampled_cloud->points[i]) > 1.5){
+                    downsampled_cloud->points[i].x -= 0.4;//gps와의 match를 위한 필수 조건
+                    near_ego_cloud->push_back(downsampled_cloud->points[i]);
+                }
             }
         }
         

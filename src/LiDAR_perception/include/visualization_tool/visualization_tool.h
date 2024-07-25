@@ -325,7 +325,7 @@ public:
             line_strip.id = id;
             line_strip.type = visualization_msgs::Marker::LINE_STRIP;
 
-            line_strip.scale.x = 1.0;
+            line_strip.scale.x = 0.5;
 
             line_strip.color.r = r;
             line_strip.color.g = g;
