@@ -278,14 +278,16 @@ public:
                 PointType maxPoint,minPoint;
                 pcl::getMinMax3D(*(*iter), minPoint, maxPoint);
                         
-                Object_info cone_info;
-                cone_info.max_point = maxPoint;
-                cone_info.min_point = minPoint;
-                cone_info.mid_point = c1;
+                Object_info obj_info;
+                obj_info.max_point = maxPoint;
+                obj_info.min_point = minPoint;
+                obj_info.mid_point.x = (maxPoint.x + minPoint.x)/2;
+                obj_info.mid_point.y = (maxPoint.y + minPoint.y)/2;
+                obj_info.mid_point.z = (maxPoint.z + minPoint.z)/2;
                 
                 *Clustered_Cloud += *(*iter);
 
-                obj_center_point.push_back(cone_info); 
+                obj_center_point.push_back(obj_info); 
             }
 
             count++;
