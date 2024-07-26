@@ -1,0 +1,5 @@
+"*.dae"
+
+build/
+
+devel/
