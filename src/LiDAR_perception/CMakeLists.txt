@@ -41,3 +41,8 @@ target_link_libraries(gpslam ${catkin_LIBRARIES}${PCL_LIBRARIES})
 add_executable(point_clicker src/point_clicker.cpp )
 add_dependencies(point_clicker ${catkin_EXPORTED_TARGETS} ${PCL_LIBRARIES} ${OpenCV_LIBS})
 target_link_libraries(point_clicker ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS} pcl_visualization)
+
+catkin_install_python(PROGRAMS
+  scripts/pub_map.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)

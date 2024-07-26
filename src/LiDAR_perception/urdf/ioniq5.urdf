@@ -2,7 +2,7 @@
 <robot name="car">
   <link name="base_link">
     <visual name="base_visual">
-      <origin xyz="0 0 -1.55" rpy="0 0 -1.5708" />
+      <origin xyz="0 0 -1.65" rpy="0 0 -1.5708" />
       <geometry>
         <mesh filename="package://LiDAR_perception/urdf/ioniq5.dae" scale="0.0001 0.0001 0.0001"/>
       </geometry>

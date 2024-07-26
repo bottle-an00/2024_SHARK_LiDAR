@@ -224,7 +224,7 @@ public:
         for(int i = 0; i < cloud_size; i++){
             if(downsampled_cloud->points[i].z < 0.1){
                 if(cal_range(downsampled_cloud->points[i]) < 40 && cal_range(downsampled_cloud->points[i]) > 1.5){
-                    downsampled_cloud->points[i].x -= 0.4;//gps와의 match를 위한 필수 조건
+                    downsampled_cloud->points[i].x += LiDAR_to_GPS;//gps와의 match를 위한 필수 조건
                     near_ego_cloud->push_back(downsampled_cloud->points[i]);
                 }
             }

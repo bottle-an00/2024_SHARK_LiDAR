@@ -7,6 +7,4 @@
     <param name="cloud_topic" value="$(arg cloud_topic)"/>
   </node>
 
-  <node name="$(anon rviz)" pkg="rviz" type="rviz" args="-d $(find patchworkpp)/rviz/demo.rviz"/>
-
 </launch>

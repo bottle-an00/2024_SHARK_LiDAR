@@ -1,4 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+
+#rosrun으로 실행했을때 위의 !/usr/bin/env python3를 !/usr/bin/env python로 한다면 python2버전으로 실행하는 것이 되어 오류가 발생할 수도 있음
+#추가로 roslaunch로 실행했을 때 위의 이유로 프로세스가 죽어버리기도 한다. 
+
 import rospy
 from sensor_msgs.msg import PointCloud2, PointField
 import sensor_msgs.point_cloud2 as pc2
@@ -34,13 +38,15 @@ def read_pcd_file(pcd_file):
 
 def main():
     try:
-        directory = "./maps/filtered/"
+        rospy.init_node('multi_pcd_publisher', anonymous=True)
+
+        home_dir = os.path.expanduser("~")
+        directory = home_dir + "/2024_SHARK_LiDAR/src/LiDAR_perception/maps/filtered/"
 
         pcd_files = [f for f in os.listdir(directory) if f.endswith('.pcd')]
 
         pcd_files_path = [directory + pcd_files[i] for i in range(len(pcd_files))]
 
-        rospy.init_node('multi_pcd_publisher', anonymous=True)
 
         pub1 = rospy.Publisher("HD_MAP/"+pcd_files[0].split('.')[0], PointCloud2, queue_size=10)
         pub2 = rospy.Publisher("HD_MAP/"+pcd_files[1].split('.')[0], PointCloud2, queue_size=10)

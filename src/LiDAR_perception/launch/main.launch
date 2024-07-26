@@ -1,0 +1,9 @@
+<launch>
+  <!-- main -->
+  <include file="$(find LiDAR_perception)/launch/ioniq5.launch" />
+
+  <include file="$(find LiDAR_perception)/launch/run.launch" />
+
+  <include file="$(find patchworkpp)/launch/demo.launch" />
+
+</launch>

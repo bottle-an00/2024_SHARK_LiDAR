@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import open3d as o3d
 import numpy as np
 import os
@@ -52,7 +54,10 @@ def remove_radius_outliers(pcd, nb_points=16, radius=0.05):
 
 
 def main():
-    directory = "./maps/"
+    home_dir = os.path.expanduser("~")
+
+    directory = home_dir + "/2024_SHARK_LiDAR/src/LiDAR_perception/maps/"
+
     pcd_files = [f for f in os.listdir(directory) if f.endswith('.pcd')]
 
     for file in pcd_files:

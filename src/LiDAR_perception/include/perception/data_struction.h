@@ -61,6 +61,8 @@ typedef pcl::PointXYZI  PointType;
 
 const extern int sensor_channel = 32;
 
+const extern double LiDAR_to_GPS = -0.40; //라이다 위치 기준 gnss센서위치
+
 std::string getHomeDirectory()
  {
      const char* homeDir = getenv("HOME");
@@ -74,7 +76,7 @@ std::string getHomeDirectory()
 
 extern const string homeDirectory = getHomeDirectory();
 
-extern const string fileDirectory = homeDirectory + "/2024_SHARK_LiDAR/maps";
+extern const string fileDirectory = homeDirectory + "/2024_SHARK_LiDAR/src/LiDAR_perception/maps";
 
 struct Ego_status{
     bool is_initialize = false;
