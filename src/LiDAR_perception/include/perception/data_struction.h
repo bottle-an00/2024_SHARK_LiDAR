@@ -45,6 +45,8 @@
 
 #include <tf2_msgs/TFMessage.h>
 #include <Eigen/Geometry>
+#include <cstdlib> //getenv()용도
+#include <boost/filesystem.hpp>
 
 #define PI 3.14159265
 
@@ -52,13 +54,27 @@
 using Eigen::MatrixXf;
 using Eigen::JacobiSVD;
 using Eigen::VectorXf;
+
 using namespace std;
 
 typedef pcl::PointXYZI  PointType;
 
 const extern int sensor_channel = 32;
 
-extern const string fileDirectory = "/home/jba/2024_SHARK_LiDAR/maps";
+std::string getHomeDirectory()
+ {
+     const char* homeDir = getenv("HOME");
+     if (homeDir == nullptr) {
+         std::cerr << "HOME environment variable is not set." << std::endl;
+         return "";
+     }
+
+     return std::string(homeDir);
+}
+
+extern const string homeDirectory = getHomeDirectory();
+
+extern const string fileDirectory = homeDirectory + "/2024_SHARK_LiDAR/maps";
 
 struct Ego_status{
     bool is_initialize = false;

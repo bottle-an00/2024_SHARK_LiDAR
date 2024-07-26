@@ -52,7 +52,7 @@ def remove_radius_outliers(pcd, nb_points=16, radius=0.05):
 
 
 def main():
-    directory = "/home/jba/2024_SHARK_LiDAR/maps/"
+    directory = "./maps/"
     pcd_files = [f for f in os.listdir(directory) if f.endswith('.pcd')]
 
     for file in pcd_files:

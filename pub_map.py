@@ -34,7 +34,7 @@ def read_pcd_file(pcd_file):
 
 def main():
     try:
-        directory = "/home/jba/2024_SHARK_LiDAR/maps/filtered/"
+        directory = "./maps/filtered/"
 
         pcd_files = [f for f in os.listdir(directory) if f.endswith('.pcd')]
 

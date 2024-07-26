@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <vector>
-#include <boost/filesystem.hpp>
 #include "perception/data_struction.h"
 #include <map>
 
@@ -66,10 +65,14 @@ public:
 
         return points;
     }
-    
+
+ 
+
     Polygon readOuterPolygon(){
 
-        Polygon output_Polygon = readPolygon("/home/jba/2024_SHARK_LiDAR/src/LiDAR_perception/include/RCA/Outer.txt");
+        string home_path = getHomeDirectory();
+        
+        Polygon output_Polygon = readPolygon(home_path + "/2024_SHARK_LiDAR/src/LiDAR_perception/include/RCA/Outer.txt");
 
         cout << "Outer::" << "point num :: " << output_Polygon.vertices.size() << endl;
 
@@ -80,7 +83,9 @@ public:
 
         vector<Polygon> innerPolygon;
 
-        string folder_path = "/home/jba/2024_SHARK_LiDAR/src/LiDAR_perception/include/RCA/Inner/";
+        string home_path = getHomeDirectory();
+
+        string folder_path = home_path +  "/2024_SHARK_LiDAR/src/LiDAR_perception/include/RCA/Inner/";
 
         for (const auto& entry : fs::directory_iterator(folder_path)) {
             if (fs::is_regular_file(entry) && entry.path().extension() == ".txt") {
