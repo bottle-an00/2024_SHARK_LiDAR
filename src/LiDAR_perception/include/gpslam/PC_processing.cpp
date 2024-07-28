@@ -53,8 +53,8 @@ public:
         pubGroundMap = nh.advertise<sensor_msgs::PointCloud2> ("/GroundMap", 1); 
 
         downSizeFilterLane.setLeafSize(0.2, 0.2, 0.2);
-        downSizeFilterNonGround.setLeafSize(0.2, 0.2, 0.2);
-        downSizeFilterGround.setLeafSize(0.8, 0.8, 0.8);
+        downSizeFilterNonGround.setLeafSize(0.4, 0.4, 0.4);
+        downSizeFilterGround.setLeafSize(0.4, 0.4, 0.4);
 
         allocateMemory();
         resetParameters();
@@ -138,13 +138,18 @@ public:
     }
 
     void run(){
-        process_LiDAR_data();
+        cout << "roll : " << ego_info.roll*180/PI << " pitch : " << ego_info.pitch*180/PI << endl;
 
-        save_PCD_source();
+        if(ego_info.roll*180/PI < 0.2 && ego_info.pitch*180/PI < 0.2 ){
 
-        publishCloud();
+            process_LiDAR_data();
 
-        resetParameters();
+            save_PCD_source();
+
+            publishCloud();
+
+            resetParameters();
+        }
     }
 
     void process_LiDAR_data(){
@@ -156,7 +161,7 @@ public:
             
             if(thisPoint.intensity == 255 || thisPoint.intensity == 170){
 
-                if(cal_range(thisPoint) < 15){ 
+                if(cal_range(thisPoint) < 15 && thisPoint.z >-1.65 && thisPoint.z <-1.45){ 
 
                     thisPoint.x -= 0.4;
                     
@@ -164,7 +169,7 @@ public:
                 }
             }
 
-            if(cal_range(thisPoint) < 15){
+            if(cal_range(thisPoint) < 15 && thisPoint.z >-1.65 && thisPoint.z <-1.45){
                 thisPoint.x -= 0.4;
                 GroundCloud->push_back(thisPoint);
             }
@@ -175,7 +180,7 @@ public:
         for(int i = 0; i < cloud_size; i++ ){
             PointType thisPoint = nongroundCloudIn->points[i];
             
-            if(thisPoint.z >= -1.4 && cal_range(thisPoint)<15 && cal_range(thisPoint)>2 ){
+            if(thisPoint.z >= -1.4 && cal_range(thisPoint)<90 && cal_range(thisPoint)>2 ){
                 
                 thisPoint.x -= 0.4;
                 NonLaneCloud->push_back(thisPoint);
@@ -220,12 +225,26 @@ public:
         return cloudOut;
     }
 
-    void save_PCD_source(){
+    pcl::PointCloud<PointType>::Ptr downsampled_cloud(pcl::PointCloud<PointType>::Ptr input_cloud){
 
+        pcl::PointCloud<PointType>::Ptr downsampled_cloud(new pcl::PointCloud<PointType>);
+
+        pcl::VoxelGrid<PointType> sor;
+        sor.setInputCloud(input_cloud);  
+        sor.setLeafSize(0.20f, 0.2f, 0.20f);  
+        sor.filter(*downsampled_cloud);
+
+        return downsampled_cloud;
+    }
+
+    void save_PCD_source(){
+        *NonGroundMapCloud = *downsampled_cloud(NonGroundMapCloud);
         *NonGroundMapCloud  += *transformPointCloud(NonLaneCloud);
 
+        *laneMapCloud = *downsampled_cloud(laneMapCloud);
     	*laneMapCloud += *transformPointCloud(laneCloud);
 
+        *GroundMapCloud = *downsampled_cloud(GroundMapCloud);
     	*GroundMapCloud += *transformPointCloud(GroundCloud);
         
     }
@@ -295,7 +314,7 @@ int main(int argc, char** argv)
 
     std::thread saveMap(&gpslam::save_PCD_Map, &GS);
     
-    ros::Rate rate(200);
+    ros::Rate rate(50);
     
     while (ros::ok())
     {

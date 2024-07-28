@@ -59,12 +59,14 @@ def main():
     directory = home_dir + "/2024_SHARK_LiDAR/src/LiDAR_perception/maps/"
 
     pcd_files = [f for f in os.listdir(directory) if f.endswith('.pcd')]
+    
+    merged_pcd = o3d.geometry.PointCloud()
 
     for file in pcd_files:
         filepath = os.path.join(directory, file)
 
         new_pcd_map = change_coordinate(filepath)
-        
+        merged_pcd += new_pcd_map
         #new_pcd_map = roi_z(new_pcd_map,-1.2)
         new_pcd_map, _ = remove_statistical_outliers(new_pcd_map) 
         
@@ -73,6 +75,8 @@ def main():
         new_pcd_file = directory + "filtered/filtered_" + file 
         o3d.io.write_point_cloud(new_pcd_file,new_pcd_map)
 
+    merged_pcd_file = directory + "/merged_map.pcd" 
+    o3d.io.write_point_cloud(merged_pcd_file,merged_pcd)
     print("finish converting")
 
 

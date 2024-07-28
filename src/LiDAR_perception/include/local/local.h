@@ -1,6 +1,7 @@
 #include "geodetic_utils.h"
 #include <sensor_msgs/Imu.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include "morai_msgs/GPSMessage.h"
 
 #include <ros/ros.h>
@@ -33,7 +34,7 @@ private:
     double pitch = 0.0;
     double yaw   = 0.0;
     double e_,n_,u_;
-    geometry_msgs::PoseStamped data2;
+    geometry_msgs::PoseWithCovarianceStamped data2;
 
       
     tf::StampedTransform MappedTrans;
@@ -44,6 +45,8 @@ private:
 
     tf::StampedTransform camera_2_base_link_Trans;
     tf::TransformBroadcaster tfBroadcasterCamera2Baselink;
+    bool is_first = true;
+
 public:
 
     Local():
@@ -56,7 +59,7 @@ public:
         sync->registerCallback(boost::bind(&Local::gpscallback, this, _1, _2));
 
         pub_local =  nh.advertise<geometry_msgs::PoseStamped>("/local_msgs_for_vision2", 1000);
-        pub_local2 =  nh.advertise<geometry_msgs::PoseStamped>("/local_msgs_for_vision_for_checking_pub", 1000);
+        pub_local2 =  nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/local_msgs_for_vision_for_initialization", 1000);
 
         MappedTrans.frame_id_ = "/camera_init";
         MappedTrans.child_frame_id_ = "/camera";
@@ -95,16 +98,22 @@ public:
         data.pose.orientation.y = pitch;
         data.pose.orientation.z = yaw;
 
-        data2.header.stamp = ros::Time::now();
-        data2.header.frame_id = "map";
-        data2.pose.position.x = e_;
-        data2.pose.position.y = n_;
-        data2.pose.position.z = 0.0;
-        data2.pose.orientation = Imu_msg->orientation;
+        if(is_first){
+            data2.header.stamp = ros::Time::now();
+            data2.header.frame_id = "world";
+            data2.pose.pose.position.x = e_;
+            data2.pose.pose.position.y = n_;
 
+            geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromRollPitchYaw
+                                  (roll, pitch, yaw);
+
+            data2.pose.pose.orientation = odom_quat;
+            is_first = false; 
+            pub_local2.publish(data2);
+
+        }
         pub_local.publish(data);
-        pub_local2.publish(data2);
-        publishTF(Gps_msg->header.stamp);
+        //publishTF(Gps_msg->header.stamp);
     }
 
     void imucallback(const sensor_msgs::Imu::ConstPtr& Imu_msg) {
