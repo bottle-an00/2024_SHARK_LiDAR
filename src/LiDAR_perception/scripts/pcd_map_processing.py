@@ -67,7 +67,8 @@ def main():
 
         new_pcd_map = change_coordinate(filepath)
         merged_pcd += new_pcd_map
-        #new_pcd_map = roi_z(new_pcd_map,-1.2)
+        if file == "NongroundMap.pcd":
+            new_pcd_map = roi_z(new_pcd_map,-1.7)
         new_pcd_map, _ = remove_statistical_outliers(new_pcd_map) 
         
         

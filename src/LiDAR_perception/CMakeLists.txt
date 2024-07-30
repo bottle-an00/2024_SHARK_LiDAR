@@ -42,6 +42,10 @@ add_executable(point_clicker src/point_clicker.cpp )
 add_dependencies(point_clicker ${catkin_EXPORTED_TARGETS} ${PCL_LIBRARIES} ${OpenCV_LIBS})
 target_link_libraries(point_clicker ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS} pcl_visualization)
 
+add_executable(gps_killer include/local/gps_killer.cpp )
+add_dependencies(gps_killer ${catkin_EXPORTED_TARGETS} ${PCL_LIBRARIES} ${OpenCV_LIBS})
+target_link_libraries(gps_killer ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS} pcl_visualization)
+
 catkin_install_python(PROGRAMS
   scripts/pub_map.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

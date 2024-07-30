@@ -17,6 +17,7 @@ NdtLocalizer::NdtLocalizer(ros::NodeHandle &nh, ros::NodeHandle &private_nh):nh_
   initial_pose_sub_ = nh_.subscribe("local_msgs_for_vision_for_initialization", 100, &NdtLocalizer::callback_init_pose, this);
   map_points_sub_ = nh_.subscribe("points_map", 1, &NdtLocalizer::callback_pointsmap, this);
   sensor_points_sub_ = nh_.subscribe("filtered_points", 1, &NdtLocalizer::callback_pointcloud, this);
+  local_sub_ = nh_.subscribe("/local_msgs_for_vision2", 1, &NdtLocalizer::callback_local, this);
 
   diagnostic_thread_ = std::thread(&NdtLocalizer::timer_diagnostic, this);
   diagnostic_thread_.detach();
@@ -85,8 +86,15 @@ void NdtLocalizer::callback_init_pose(
     // mapTF_initial_pose_msg_ptr->header.stamp = initial_pose_msg_ptr->header.stamp;
     initial_pose_cov_msg_ = *mapTF_initial_pose_msg_ptr;
   }
+  get_init_pose = true;
   // if click the initpose again, re init！
   init_pose = false;
+}
+
+void NdtLocalizer::callback_local(
+  const geometry_msgs::PoseStamped::ConstPtr & local_msg_ptr)
+{
+  if(local_msg_ptr->pose.orientation.w == 0.0) get_init_pose = false;
 }
 
 void NdtLocalizer::callback_pointsmap(
@@ -121,6 +129,7 @@ void NdtLocalizer::callback_pointsmap(
 void NdtLocalizer::callback_pointcloud(
   const sensor_msgs::PointCloud2::ConstPtr & sensor_points_sensorTF_msg_ptr)
 {
+  if(!get_init_pose) return;
   const auto exe_start_time = std::chrono::system_clock::now();
   // mutex Map
   std::lock_guard<std::mutex> lock(ndt_map_mtx_);

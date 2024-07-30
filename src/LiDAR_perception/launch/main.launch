@@ -6,4 +6,6 @@
 
   <include file="$(find patchworkpp)/launch/demo.launch" />
 
+  <include file="$(find ndt_localizer)/launch/ndt_localizer.launch" />
+
 </launch>

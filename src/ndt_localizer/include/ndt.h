@@ -10,6 +10,7 @@
 
 #include <diagnostic_msgs/DiagnosticArray.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/PointCloud2.h>
@@ -40,6 +41,7 @@ private:
     ros::Subscriber initial_pose_sub_;
     ros::Subscriber map_points_sub_;
     ros::Subscriber sensor_points_sub_;
+    ros::Subscriber local_sub_;
 
     ros::Publisher sensor_aligned_pose_pub_;
     ros::Publisher ndt_pose_pub_;
@@ -57,7 +59,9 @@ private:
     Eigen::Matrix4f base_to_sensor_matrix_;
     Eigen::Matrix4f pre_trans, delta_trans;
     bool init_pose = false;
-
+    
+    bool get_init_pose = false;
+    
     std::string base_frame_;
     std::string map_frame_;
 
@@ -83,6 +87,7 @@ private:
     void publish_tf(const std::string & frame_id, const std::string & child_frame_id,
                     const geometry_msgs::PoseStamped & pose_msg);
 
+    void callback_local(const  geometry_msgs::PoseStamped::ConstPtr & local_msg_ptr);
     void callback_pointsmap(const sensor_msgs::PointCloud2::ConstPtr & pointcloud2_msg_ptr);
     void callback_init_pose(const geometry_msgs::PoseWithCovarianceStamped::ConstPtr & pose_conv_msg_ptr);
     void callback_pointcloud(const sensor_msgs::PointCloud2::ConstPtr & pointcloud2_msg_ptr);

@@ -3,6 +3,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include "morai_msgs/GPSMessage.h"
+#include "EKF/FusionEKF.h"
 
 #include <ros/ros.h>
 #include <message_filters/subscriber.h>
@@ -25,6 +26,8 @@ private:
     message_filters::Subscriber<sensor_msgs::Imu> sub_imu;
     message_filters::Subscriber<morai_msgs::GPSMessage> sub_gps;
     boost::shared_ptr<local_sync> sync;
+    
+    ros::Subscriber sub_ndt_local;
 
     ros::Publisher pub_local;
     ros::Publisher pub_local2;
@@ -34,6 +37,7 @@ private:
     double pitch = 0.0;
     double yaw   = 0.0;
     double e_,n_,u_;
+
     geometry_msgs::PoseWithCovarianceStamped data2;
 
       
@@ -45,21 +49,27 @@ private:
 
     tf::StampedTransform camera_2_base_link_Trans;
     tf::TransformBroadcaster tfBroadcasterCamera2Baselink;
-    bool is_first = true;
+    bool Non_GPS_Flag = false;
 
+    geometry_msgs::PoseStamped ndt_msgs;
+
+    FusionEKF EKF;
+    VectorXd pred_local;
+    MeasurementPackage measurement_pack = VectorXd(2);
 public:
 
     Local():
         nh("~"){
 
         sub_imu.subscribe(nh, "/imu", 100);
-        sub_gps.subscribe(nh, "/gps", 100);
+        sub_gps.subscribe(nh, "/gps_test", 100);
 
         sync.reset(new local_sync(Local_Policy(10), sub_imu, sub_gps));
         sync->registerCallback(boost::bind(&Local::gpscallback, this, _1, _2));
 
         pub_local =  nh.advertise<geometry_msgs::PoseStamped>("/local_msgs_for_vision2", 1000);
         pub_local2 =  nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/local_msgs_for_vision_for_initialization", 1000);
+        sub_ndt_local = nh.subscribe<geometry_msgs::PoseStamped>("/ndt_pose",10, &Local::ndtLocalHandler,this);
 
         MappedTrans.frame_id_ = "/camera_init";
         MappedTrans.child_frame_id_ = "/camera";
@@ -78,42 +88,51 @@ public:
         ROS_INFO_STREAM("\033[1;32m" << "Local Working..."<< "\033[0m");
         
         imucallback(Imu_msg);
-
+        
         double lat_, lon_, alt_;
 
         lat_ = Gps_msg->latitude;
         lon_ = Gps_msg->longitude;
         alt_ = Gps_msg->altitude;
-        
 
-        GC.initialiseReference(37.4193122129, 127.125659528, 1.56630456448);
-        GC.geodetic2Enu(lat_,lon_,alt_,&e_,&n_,&u_);
+        if(lat_ != 0 && lon_ != 0){
 
-        geometry_msgs::PoseStamped data;
-        data.header.stamp = ros::Time::now();
-        data.pose.position.x = e_;
-        data.pose.position.y = n_;
-        data.pose.position.z = yaw;
-        data.pose.orientation.x = roll;
-        data.pose.orientation.y = pitch;
-        data.pose.orientation.z = yaw;
+            GC.initialiseReference(37.4193122129, 127.125659528, 1.56630456448);
+            GC.geodetic2Enu(lat_,lon_,alt_,&e_,&n_,&u_);
 
-        if(is_first){
-            data2.header.stamp = ros::Time::now();
-            data2.header.frame_id = "world";
-            data2.pose.pose.position.x = e_;
-            data2.pose.pose.position.y = n_;
+            geometry_msgs::PoseStamped data;
+            data.header.stamp = ros::Time::now();
+            data.pose.position.x = e_;
+            data.pose.position.y = n_;
+            data.pose.position.z = yaw;
+            data.pose.orientation.x = roll;
+            data.pose.orientation.y = pitch;
+            data.pose.orientation.z = yaw;
+            data.pose.orientation.w = 0.0; // 0은 센서 정상작동시 1은 비정상 작동시(gps 음영)
 
-            geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromRollPitchYaw
-                                  (roll, pitch, yaw);
+            pub_local.publish(data);
+            publishTF(Gps_msg->header.stamp);
+            Non_GPS_Flag = true;
 
-            data2.pose.pose.orientation = odom_quat;
-            is_first = false; 
-            pub_local2.publish(data2);
+        }else{
 
+            if(Non_GPS_Flag == true){
+                data2.header.stamp = ros::Time::now();
+                data2.header.frame_id = "world";
+                data2.pose.pose.position.x = e_;
+                data2.pose.pose.position.y = n_;
+
+                geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromRollPitchYaw
+                                          (roll, pitch, yaw);
+
+                data2.pose.pose.orientation = odom_quat;
+                pub_local2.publish(data2);
+
+                Non_GPS_Flag = false;
+            }
+
+            publish_EKF_local(Imu_msg);
         }
-        pub_local.publish(data);
-        //publishTF(Gps_msg->header.stamp);
     }
 
     void imucallback(const sensor_msgs::Imu::ConstPtr& Imu_msg) {
@@ -127,6 +146,43 @@ public:
         // Compute the roll, pitch, and yaw angles from tf::Quaternion
         tf::Matrix3x3(tf_quaternion).getRPY(roll, pitch, yaw);
 
+    }
+
+    void ndtLocalHandler(const geometry_msgs::PoseStamped::ConstPtr& ndt_local_msgs){
+        ndt_msgs = *ndt_local_msgs;
+
+        meas_package.raw_measurements_<< ndt_msgs.pose.position.x, ndt_msgs.pose.position.y;
+
+        geometry_msgs::Quaternion quaternion = ndt_msgs.pose.orientation;
+
+        // Convert geometry_msgs::Quaternion to tf::Quaternion
+        tf::Quaternion tf_quaternion;
+        tf::quaternionMsgToTF(quaternion, tf_quaternion);
+
+        // Compute the roll, pitch, and yaw angles from tf::Quaternion
+        tf::Matrix3x3(tf_quaternion).getRPY(roll, pitch, yaw);
+
+        ndt_msgs.pose.orientation.x = roll;
+        ndt_msgs.pose.orientation.y = pitch;
+        ndt_msgs.pose.orientation.z = yaw;
+        ndt_msgs.pose.orientation.w = 1.0;
+
+        // pub_local.publish(ndt_msgs);
+    }
+    
+    void publish_EKF_local(const sensor_msgs::Imu::ConstPtr& Imu_msg){
+        meas_package.timestamp_ = static_cast<long long>(Imu_msg->header.stamp.toNSec());
+        
+        EKF.ProcessMeasurement(measurement_pack);
+
+        pred_local = EKF.ekf_.x_;
+
+        ndt_msgs.header.stamp = Imu_msg->header.stamp;
+        
+        ndt_msgs.pose.position.x = pred_local[0];
+        ndt_msgs.pose.position.y = pred_local[1];
+        
+        pub_local.publish(ndt_msgs);
     }
 
     void publishTF(ros::Time stamp_){
