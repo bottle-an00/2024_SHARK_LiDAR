@@ -62,7 +62,7 @@ typedef pcl::PointXYZI  PointType;
 const extern int sensor_channel = 32;
 
 const extern double LiDAR_to_GPS = -0.40; //라이다 위치 기준 gnss센서위치
-
+const extern double LiDAR_Height = 1.25;
 std::string getHomeDirectory()
  {
      const char* homeDir = getenv("HOME");
@@ -91,6 +91,11 @@ struct Ego_status{
 
 struct Object_info{
     int id;
+
+    double heading;
+
+    pcl::PointCloud<PointType>::Ptr obj_cloud; // 물체 기준 좌표계에서 물체에 해당하는 pointcloud
+
     PointType min_point;    
     PointType max_point;
     PointType mid_point;    
@@ -176,6 +181,52 @@ VectorXf conduct_PCA (pcl::PointCloud<PointType>::Ptr input_cloud, int num){
     if (normal_(2) < 0) { for(int i=0; i<3; i++) normal_(i) *= -1; }
         
     return normal_;// 법선 벡터를 추출
+}
+
+
+void clustering(pcl::PointCloud<PointType>::Ptr input_cloud, vector<pcl::PointCloud<PointType>::Ptr>& output_cloud_vec,
+    double clusterTolerance, int minSize , int maxSize){
+        
+    int clusternum =1;
+        
+    std::vector<int> indice;
+    pcl::removeNaNFromPointCloud(*input_cloud,*input_cloud,indice);
+    pcl::PointCloud<PointType>::Ptr downsampled_cloud(new pcl::PointCloud<PointType>);
+        
+    pcl::VoxelGrid<PointType> sor;
+    sor.setInputCloud(input_cloud);  // 입력 클라우드 설정
+    sor.setLeafSize(.2f, .2f, .05f);  // Voxel 크기 설정 (x, y, z)
+    //다운샘플링을 수행
+    sor.filter(*downsampled_cloud);
+
+    if (downsampled_cloud->points.size() > 0){
+        pcl::search::KdTree<pcl::PointXYZI>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZI>);
+        tree->setInputCloud(downsampled_cloud);
+        std::vector<pcl::PointIndices> clusterIndices;
+        pcl::EuclideanClusterExtraction<pcl::PointXYZI> ec;
+        ec.setClusterTolerance(clusterTolerance);
+        ec.setMinClusterSize(minSize);
+        ec.setMaxClusterSize(maxSize);
+        ec.setSearchMethod(tree);
+        ec.setInputCloud(downsampled_cloud);
+        ec.extract(clusterIndices);
+
+        for (std::vector<pcl::PointIndices>::const_iterator it = clusterIndices.begin (); it != clusterIndices.end (); ++it)
+        {
+            pcl::PointCloud<PointType>::Ptr ClusterCloud(new pcl::PointCloud<PointType>);
+            for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
+            {   
+
+                pcl::PointXYZI pt = downsampled_cloud->points[*pit];
+                if(maxSize == 800) pt.intensity = 10*clusternum;
+                ClusterCloud->points.push_back(pt);
+            }
+            clusternum++;
+
+            output_cloud_vec.push_back(ClusterCloud);
+        }       
+    }
+        
 }
 
 #endif

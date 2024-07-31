@@ -4,6 +4,7 @@
 #include "EKF/measurement_package.h"
 #include "visualization_tool/visualization_tool.h"
 #include "RCA/Ray_Casting_Algorithm.h"
+#include "tracking_tools/tracking_tools.h"
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -34,6 +35,7 @@ private:
 
     pcl::PointCloud<PointType>::Ptr Clustered_Cloud;// 클러스터링된 cloud
     pcl::PointCloud<PointType>::Ptr ROICloud;// 클러스터링된 cloud중 z값이 0 이하인 점들만 남김
+    pcl::PointCloud<PointType>::Ptr RegisteredOBJCloud;// registered된 최종 object pointcloud
 
     visualization_msgs::MarkerArray obj_boundary_markerarray;    
     visualization_msgs::MarkerArray obj_center_markerarray;    
@@ -41,8 +43,8 @@ private:
     visualization_msgs::MarkerArray outer_zone;    
     visualization_msgs::MarkerArray nearest_inner_zone;    
 
-    vector<Object_info> obj_center_point;
-    vector<PointType> lastest_cones;
+    vector<Object_info> detected_objects;
+    vector<Object_info> object_DB;
 
     std_msgs::Header cloudHeader;
     pcl::KdTreeFLANN<PointType> Ground_kdtree;
@@ -57,6 +59,7 @@ private:
     vector<int> id_list;
     
     Visualization_tool Vt;
+    tracking_tools Tt;
     Ray_Casting_Algorithm RCA;
 
     Polygon outer; 
@@ -98,15 +101,16 @@ public:
         groundCloudIn.reset(new pcl::PointCloud<PointType>());
         nongroundCloudIn.reset(new pcl::PointCloud<PointType>());
         ROICloud.reset(new pcl::PointCloud<PointType>());
+        RegisteredOBJCloud.reset(new pcl::PointCloud<PointType>());
 
         Clustered_Cloud.reset(new pcl::PointCloud<PointType>());
         
         pred_position.resize(1000, Eigen::VectorXd::Zero(4));
         measurement_pack_list.resize(1000);
         meas_package.raw_measurements_ = VectorXd(2);
-        EKFs.resize(1000);
+        EKFs.resize(10000);
 
-        lastest_cones.resize(10000);
+        object_DB.resize(10000);
 
         obj_center_markerarray.markers.clear();
         obj_boundary_markerarray.markers.clear();
@@ -126,9 +130,10 @@ public:
             ObjCandidateCloud[i].clear();
 
         ROICloud->clear();
-
+        RegisteredOBJCloud->clear();
+        
         id_list.clear();
-        obj_center_point.clear();
+        detected_objects.clear();
         Clustered_Cloud->clear();
         
         obj_center_markerarray.markers.clear();
@@ -208,6 +213,10 @@ public:
         detect_object(ObjCandidateCloud[1]);
         //
 
+        //tracking
+        tracking(detected_objects);
+        //
+
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
 
@@ -216,6 +225,25 @@ public:
         publishCloud();
 
         resetParameters();
+    }
+    
+    void tracking(vector<Object_info>& detected_objects){
+        
+        Tt.process_matching(detected_objects, object_DB, id_list);
+
+        //measurement 정보 입력 
+
+        for(auto id : id_list){
+            meas_package.raw_measurements_<< object_DB[id].mid_point.x, object_DB[id].mid_point.y;
+            meas_package.timestamp_ = static_cast<long long>(cloudHeader.stamp.toNSec());
+            meas_package.id = id;
+            measurement_pack_list[id] = (meas_package);
+
+            EKFs[id].ProcessMeasurement(measurement_pack_list[id]);
+
+            pred_position[id] = EKFs[id].ekf_.x_;
+        }
+        
     }
 
     void detect_object(vector<pcl::PointCloud<PointType>::Ptr> input_cloud_vec){
@@ -262,13 +290,12 @@ public:
                 VectorXf cone_principle_vec = conduct_PCA((*iter),0);
 
                 if (pubVector.getNumSubscribers() != 0){
-                    Vt.visual_vector(c1,vector2point(cone_principle_vec,c1), 1.0, 1.0, 1.0,count,obj_center_point, normal_vectors,"map");
-                    Vt.visual_vector(c1,vector2point(ground_normal,c1), 0.0, 0.0,1.0,count+100,obj_center_point,normal_vectors,"map");
+                    Vt.visual_vector(c1,vector2point(cone_principle_vec,c1), 1.0, 1.0, 1.0,count,detected_objects, normal_vectors,"map");
+                    Vt.visual_vector(c1,vector2point(ground_normal,c1), 0.0, 0.0,1.0,count+100,detected_objects,normal_vectors,"map");
                     pubVector.publish(normal_vectors);
                 }
 
                 double diff_angle = (acos(ground_normal.dot(cone_principle_vec)) /(magnitude(ground_normal)*magnitude(cone_principle_vec)))*180/PI;
-                cout << diff_angle << endl << endl;
                 if (diff_angle > 75) is_obj = false;
             }
 
@@ -285,9 +312,11 @@ public:
                 obj_info.mid_point.y = (maxPoint.y + minPoint.y)/2;
                 obj_info.mid_point.z = (maxPoint.z + minPoint.z)/2;
                 
+                *obj_info.obj_cloud = *(*iter);
+
                 *Clustered_Cloud += *(*iter);
 
-                obj_center_point.push_back(obj_info); 
+                detected_objects.push_back(obj_info); 
             }
 
             count++;
@@ -305,55 +334,6 @@ public:
 
         }
     }
-    
-    void clustering(pcl::PointCloud<PointType>::Ptr input_cloud, vector<pcl::PointCloud<PointType>::Ptr>& output_cloud_vec,
-     double clusterTolerance, int minSize , int maxSize){
-        
-        int clusternum =1;
-        
-        std::vector<int> indice;
-        pcl::removeNaNFromPointCloud(*input_cloud,*input_cloud,indice);
-        pcl::PointCloud<PointType>::Ptr downsampled_cloud(new pcl::PointCloud<PointType>);
-        
-        pcl::VoxelGrid<PointType> sor;
-        sor.setInputCloud(input_cloud);  // 입력 클라우드 설정
-        sor.setLeafSize(.2f, .2f, .05f);  // Voxel 크기 설정 (x, y, z)
-        //다운샘플링을 수행
-        sor.filter(*downsampled_cloud);
-
-        if (downsampled_cloud->points.size() > 0){
-            pcl::search::KdTree<pcl::PointXYZI>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZI>);
-            tree->setInputCloud(downsampled_cloud);
-            std::vector<pcl::PointIndices> clusterIndices;
-            pcl::EuclideanClusterExtraction<pcl::PointXYZI> ec;
-            ec.setClusterTolerance(clusterTolerance);
-            ec.setMinClusterSize(minSize);
-            ec.setMaxClusterSize(maxSize);
-            ec.setSearchMethod(tree);
-            ec.setInputCloud(downsampled_cloud);
-            ec.extract(clusterIndices);
-
-            for (std::vector<pcl::PointIndices>::const_iterator it = clusterIndices.begin (); it != clusterIndices.end (); ++it)
-            {
-                pcl::PointCloud<PointType>::Ptr ClusterCloud(new pcl::PointCloud<PointType>);
-                for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
-                {   
-
-                    pcl::PointXYZI pt = downsampled_cloud->points[*pit];
-                    if(maxSize == 800) pt.intensity = 10*clusternum;
-                    ClusterCloud->points.push_back(pt);
-                }
-                clusternum++;
-
-                // if(maxSize == 500){
-                //    *Clustered_Cloud += *ClusterCloud;
-                // }
-                output_cloud_vec.push_back(ClusterCloud);
-            }       
-        }
-        
-    }
-
     
     void publishCloud(){
         // 2. Publish clouds
@@ -379,12 +359,12 @@ public:
         }
 
         if (pubObjCenter.getNumSubscribers() != 0){
-            Vt.visual_object_center(obj_center_point, obj_center_markerarray,"map");
+            Vt.visual_object_center(detected_objects, obj_center_markerarray,"map");
             pubObjCenter.publish(obj_center_markerarray);
         }
 
         if (pubObjBoundary.getNumSubscribers() != 0){
-            Vt.visual_cones_boundary(obj_center_point, obj_boundary_markerarray,"map");
+            Vt.visual_cones_boundary(detected_objects, obj_boundary_markerarray,"map");
             pubObjBoundary.publish(obj_boundary_markerarray);
         }
         if(pubNearestInner.getNumSubscribers() != 0){
