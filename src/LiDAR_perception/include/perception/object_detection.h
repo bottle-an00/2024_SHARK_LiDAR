@@ -67,8 +67,6 @@ private:
     vector<Polygon> inners;
     vector<Polygon> near_ego_inners;
 
-    int cone_id=0;
-    int count =0;
     float dx, dy, dyaw;
 public:
 
@@ -105,8 +103,8 @@ public:
 
         Clustered_Cloud.reset(new pcl::PointCloud<PointType>());
         
-        pred_position.resize(1000, Eigen::VectorXd::Zero(4));
-        measurement_pack_list.resize(1000);
+        pred_position.resize(10000, Eigen::VectorXd::Zero(4));
+        measurement_pack_list.resize(10000);
         meas_package.raw_measurements_ = VectorXd(2);
         EKFs.resize(10000);
 
@@ -144,7 +142,6 @@ public:
         
         near_ego_inners.clear();
 
-        count++;
     }
 
     ~Object_Detection(){}
@@ -209,7 +206,7 @@ public:
         clustering(ROICloud,ObjCandidateCloud[0], 1.0 , 5, 2000);
         
         Adaptive_Clustering(ObjCandidateCloud[0]);
-        
+
         detect_object(ObjCandidateCloud[1]);
         //
 
@@ -242,6 +239,8 @@ public:
             EKFs[id].ProcessMeasurement(measurement_pack_list[id]);
 
             pred_position[id] = EKFs[id].ekf_.x_;
+            *RegisteredOBJCloud += *(object_DB[id].obj_cloud);
+            cout << id <<endl;
         }
         
     }
@@ -311,8 +310,9 @@ public:
                 obj_info.mid_point.x = (maxPoint.x + minPoint.x)/2;
                 obj_info.mid_point.y = (maxPoint.y + minPoint.y)/2;
                 obj_info.mid_point.z = (maxPoint.z + minPoint.z)/2;
-                
-                *obj_info.obj_cloud = *(*iter);
+
+                (obj_info.obj_cloud).reset(new pcl::PointCloud<PointType>());
+                *(obj_info.obj_cloud) = *(*iter);
 
                 *Clustered_Cloud += *(*iter);
 
@@ -340,7 +340,7 @@ public:
         sensor_msgs::PointCloud2 laserCloudTemp;
 
         if (pubROICloud.getNumSubscribers() != 0){
-            pcl::toROSMsg(*ROICloud, laserCloudTemp);
+            pcl::toROSMsg(*RegisteredOBJCloud, laserCloudTemp);
             laserCloudTemp.header.stamp = cloudHeader.stamp;
             laserCloudTemp.header.frame_id ="map";
             pubROICloud.publish(laserCloudTemp);

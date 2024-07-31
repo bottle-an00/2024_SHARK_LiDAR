@@ -22,7 +22,7 @@ public:
     gps_killer():
         nh("~"){
             sub_gps = nh.subscribe<morai_msgs::GPSMessage>("/gps",10, &gps_killer::GPSHandler,this);
-            pub_gps = nh.advertise<morai_msgs::GPSMessage>("/gps_test", 1000);
+            pub_gps = nh.advertise<morai_msgs::GPSMessage>("/gps_test", 10);
     }
 
     ~gps_killer(){};
@@ -34,7 +34,7 @@ public:
             data.latitude =0.0;
             data.longitude =0.0;
         }
-
+        pubInfo();
     }
 
     void pubInfo(){
@@ -75,7 +75,23 @@ int main(int argc, char** argv){
 
 
     if(pid != 0){
+        ros::init(argc, argv, "GPS_KILLER");
 
+        gps_killer GK;
+        ros::Rate rate(20);
+
+        while (ros::ok())
+        {
+            GK.setFlag(*sign_ptr);
+                        
+            ros::spinOnce();
+
+            rate.sleep();
+        }
+        
+    }
+
+    else{
         while(1){
             cin >> input;
             if(input == "1"){
@@ -88,24 +104,7 @@ int main(int argc, char** argv){
                 }
             }
         } 
-    }
-
-    else{
-        ros::init(argc, argv, "GPS_KILLER");
-
-        gps_killer GK;
-        ros::Rate rate(30);
-
-        while (ros::ok())
-        {
-            GK.setFlag(*sign_ptr);
-                        
-            ros::spinOnce();
-
-            GK.pubInfo();
-
-            rate.sleep();
-        }
+        
         
     }
     

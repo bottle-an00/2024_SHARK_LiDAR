@@ -20,6 +20,9 @@
 #include <pcl/segmentation/extract_clusters.h>
 #include <sensor_msgs/point_cloud2_iterator.h>
 #include <pcl/registration/icp.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/features/fpfh.h>
+#include <pcl/registration/sample_consensus_prerejective.h>
 
 #include <visualization_msgs/MarkerArray.h>
 #include <visualization_msgs/Marker.h>

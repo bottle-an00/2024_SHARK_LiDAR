@@ -3,6 +3,8 @@
 
 #include "perception/data_struction.h"
 
+using FeatureType = pcl::FPFHSignature33;
+
 struct bbox_2D
 {
     vector<double> minP;
@@ -18,7 +20,9 @@ private:
 
     int current_max_id = 0; //처음 init될 때는 0 점점 추가하는 형식
 
-    double iou_threshold;
+    double iou_threshold = 0.05;
+
+    bool first_tracking = true;
 
 public:
     tracking_tools(){};
@@ -28,26 +32,32 @@ public:
         detected_object_cloud.reset(new pcl::PointCloud<PointType>());
         detected_object_cloud->clear();
 
+        int i=0;
+        
         for(auto& object : Object_DB){
-            PointType object_pt;
-            object_pt = object.mid_point;
-            object_pt.intensity = static_cast<float>(object.id);
 
+            if(i > current_max_id) break;
+            
+            object.mid_point.intensity = static_cast<float>(object.id);
+            
             detected_object_cloud->push_back(object.mid_point);
+            
+            i++;
         }
-
+        
         //kdtree 생성
         obj_kdtree.setInputCloud(detected_object_cloud);
     }
 
     double intersection_area(const bbox_2D& rect1, const bbox_2D& rect2) {
+        
         double x_left = std::max(rect1.minP[0], rect2.minP[0]);
-        double y_bottom = std::min(rect1.minP[1], rect2.minP[1]);
+        double y_bottom = std::max(rect1.minP[1], rect2.minP[1]);
 
         double x_right = std::min(rect1.maxP[0], rect2.maxP[0]);
-        double y_top = std::max(rect1.maxP[1], rect2.maxP[1]);
+        double y_top = std::min(rect1.maxP[1], rect2.maxP[1]);
 
-        if (x_right < x_left || y_bottom > y_top) {
+        if (x_right < x_left || y_top < y_bottom) {
             return 0.0f;
         }
 
@@ -55,7 +65,9 @@ public:
     }
 
     double union_area(const bbox_2D& rect1, const bbox_2D& rect2, float inter_area) {
+
         double area1 = (rect1.maxP[0] - rect1.minP[0]) * (rect1.maxP[1] - rect1.minP[1]);
+        
         double area2 = (rect2.maxP[0] - rect2.minP[0]) * (rect2.maxP[1] - rect2.minP[1]);
 
         return area1 + area2 - inter_area;
@@ -75,7 +87,7 @@ public:
 
         double inter_val = intersection_area(object_bbox,target_bbox);
         double union_val = union_area(object_bbox,target_bbox, inter_val);
-
+        cout << "id " << id <<"result " <<  inter_val/union_val << endl;
         if (union_val == 0.0) {
             return 0.0;
         }
@@ -84,9 +96,74 @@ public:
         }
     }
 
+    Eigen::Matrix4f computeInverseRT(const Eigen::Matrix4f& M) {
+
+        Eigen::Matrix3f R = M.block<3, 3>(0, 0);
+        Eigen::Vector3f T = M.block<3, 1>(0, 3);
+    
+        Eigen::Matrix3f R_transpose = R.transpose();
+        Eigen::Vector3f T_inverse = -R_transpose * T;
+    
+        Eigen::Matrix4f M_inverse = Eigen::Matrix4f::Identity();
+        M_inverse.block<3, 3>(0, 0) = R_transpose;
+        M_inverse.block<3, 1>(0, 3) = T_inverse;
+    
+        return M_inverse;
+    }
+
+    void applyRTToPointCloud(pcl::PointCloud<PointType>::Ptr& pointCloud, const Eigen::Matrix4f& RT) {
+
+        for (auto& point : pointCloud->points) {
+
+            // 동차 좌표로 변환
+            Eigen::Vector4f homogenousPoint(point.x, point.y, point.z, 1.0f);
+
+            // RT 행렬 적용
+            Eigen::Vector4f transformedPoint = RT * homogenousPoint;
+
+            // 카티지안 좌표로 변환
+            point.x = transformedPoint(0);
+            point.y = transformedPoint(1);
+            point.z = transformedPoint(2);
+        }
+    }
+
+
+
+    void computeNormals(pcl::PointCloud<PointType>::Ptr cloud, pcl::PointCloud<pcl::Normal>::Ptr normals) {
+        pcl::NormalEstimation<PointType, pcl::Normal> ne;
+        ne.setInputCloud(cloud);
+        pcl::search::KdTree<PointType>::Ptr tree(new pcl::search::KdTree<PointType>());
+        ne.setSearchMethod(tree);
+        ne.setRadiusSearch(0.03);
+        ne.compute(*normals);
+    }
+
+    void computeFPFHFeatures(pcl::PointCloud<PointType>::Ptr cloud, pcl::PointCloud<pcl::Normal>::Ptr normals, pcl::PointCloud<FeatureType>::Ptr features) {
+        pcl::FPFHEstimation<PointType, pcl::Normal, FeatureType> fpfh;
+        fpfh.setInputCloud(cloud);
+        fpfh.setInputNormals(normals);
+        pcl::search::KdTree<PointType>::Ptr tree(new pcl::search::KdTree<PointType>());
+        fpfh.setSearchMethod(tree);
+        fpfh.setRadiusSearch(0.05);
+        fpfh.compute(*features);
+    }
+    
     void process_matching(vector<Object_info>& detected_obj, vector<Object_info>& Object_DB, vector<int>& id_list){
         
-        if(Object_DB.size() > 0){
+        if(first_tracking){
+            int count =0;
+
+            for(auto object : detected_obj){
+                object.id = count;
+                Object_DB[object.id] = object;
+                count++;
+            }
+
+            first_tracking =false;
+            
+        }else{
+
             preprocessing(Object_DB);
             
             for(auto& object : detected_obj){
@@ -94,46 +171,38 @@ public:
                 std::vector<int> indices;
                 std::vector<float> distances;
                 obj_kdtree.nearestKSearch(object.mid_point, 1 ,indices, distances);
-                
+
                 int obj_id;
 
-                if(distances[0] < 2){
+                if(distances[0] < 3){
                     int id_  = static_cast<int>(detected_object_cloud->points[indices[0]].intensity);
-                    //cal_iou
-                    if(cal_iou(object,Object_DB, id_) > iou_threshold) {
 
-                        //db의 pointcloud를 현재 detected된 object의 cloud에 registraction
+                    if(cal_iou(object,Object_DB, id_) > 0) {
 
-                        pcl::IterativeClosestPoint<PointType, PointType> icp;
-                        icp.setInputSource(Object_DB[id_].obj_cloud);
-                        icp.setInputTarget(object.obj_cloud);//고정된(현재 object의 pointcloud)
+                        Object_DB[id_].min_point = object.min_point;
+                        Object_DB[id_].max_point = object.max_point;
 
-                        pcl::PointCloud<PointType> output_cloud;
-                        icp.align(output_cloud);
-
-                        //
-
-                        //object의 정보 update (min point, max point update)
-
-                        PointType minPoint,maxPoint;
-                        pcl::getMinMax3D(output_cloud, minPoint, maxPoint);
-                        Object_DB[id_].min_point = minPoint;
-                        Object_DB[id_].max_point = maxPoint;
-
-                        *(Object_DB[id_].obj_cloud) = output_cloud;
-                        //
+                        Object_DB[id_].mid_point.x = (object.max_point.x + object.min_point.x)/2;
+                        Object_DB[id_].mid_point.y = (object.max_point.y + object.min_point.y)/2;
+                        Object_DB[id_].mid_point.z = (object.max_point.z + object.min_point.z)/2;
 
                         obj_id = id_;
+
                     }else{
                         //새로운 object 추가
-                        Object_DB[current_max_id+1] = object;
                         obj_id = current_max_id+1;
+
+                        object.id =obj_id;
+                        Object_DB[obj_id] = object;
                         current_max_id++;
-                    } 
+                    }
+
                 }else{
                     //새로운 object 추가
-                    Object_DB[current_max_id+1] = object;
                     obj_id = current_max_id+1;
+
+                    object.id =obj_id;
+                    Object_DB[current_max_id+1] = object;
                     
                     current_max_id++;
                 }
