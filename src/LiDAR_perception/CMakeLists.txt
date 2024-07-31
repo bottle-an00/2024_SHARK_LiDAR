@@ -34,6 +34,10 @@ add_executable(local src/local.cpp )
 add_dependencies(local ${catkin_EXPORTED_TARGETS})
 target_link_libraries(local ${catkin_LIBRARIES}${PCL_LIBRARIES})
 
+add_executable(local_test src/local_test.cpp )
+add_dependencies(local_test ${catkin_EXPORTED_TARGETS})
+target_link_libraries(local_test ${catkin_LIBRARIES}${PCL_LIBRARIES})
+
 add_executable(gpslam include/gpslam/PC_processing.cpp )
 add_dependencies(gpslam ${catkin_EXPORTED_TARGETS})
 target_link_libraries(gpslam ${catkin_LIBRARIES}${PCL_LIBRARIES})

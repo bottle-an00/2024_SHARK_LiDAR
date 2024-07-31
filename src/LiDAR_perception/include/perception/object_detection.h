@@ -300,7 +300,7 @@ public:
             PointType maxPoint,minPoint;
             pcl::getMinMax3D(*(*iter), minPoint, maxPoint);
 
-            float tolerance = 4*cal_range(minPoint)*tan(40/32*PI/180);
+            float tolerance = 2*cal_range(minPoint)*tan(40/32*PI/180);
             clustering((*iter),ObjCandidateCloud[1], tolerance , 5, 1500);
 
         }

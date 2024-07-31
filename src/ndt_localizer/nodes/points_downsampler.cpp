@@ -5,8 +5,8 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/filters/voxel_grid.h>
 
-// #include "points_downsampler.h"
 
+// #include "points_downsampler.h"
 #define MAX_MEASUREMENT_RANGE 120.0
 
 ros::Publisher filtered_points_pub;
@@ -65,10 +65,12 @@ static void scan_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
     voxel_grid_filter.setLeafSize(voxel_leaf_size, voxel_leaf_size, voxel_leaf_size);
     voxel_grid_filter.setInputCloud(scan_ptr);
     voxel_grid_filter.filter(*filtered_scan_ptr);
+
     pcl::toROSMsg(*filtered_scan_ptr, filtered_msg);
   }
   else
   {
+    
     pcl::toROSMsg(*scan_ptr, filtered_msg);
   }
 
@@ -102,6 +104,7 @@ int main(int argc, char** argv)
   filtered_points_pub = nh.advertise<sensor_msgs::PointCloud2>("/filtered_points", 10);
 
   // Subscribers
+  
   ros::Subscriber scan_sub = nh.subscribe(POINTS_TOPIC, 10, scan_callback);
 
   ros::spin();

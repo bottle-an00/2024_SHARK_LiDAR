@@ -53,8 +53,8 @@ public:
                0, 0, 1, 0,
                0, 0, 0, 1;
     // set measurement noises
-    noise_ax = 10;
-    noise_ay = 10;
+    noise_ax = 9;
+    noise_ay = 9;
     
   }
 

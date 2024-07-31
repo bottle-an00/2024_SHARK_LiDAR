@@ -1,5 +1,5 @@
-#ifndef _LOCAL_
-#define _LOCAL_
+#ifndef _LOCAL_GT_
+#define _LOCAL_GT_
 
 #include "geodetic_utils.h"
 #include <sensor_msgs/Imu.h>
@@ -18,17 +18,17 @@
 #include <tf/transform_datatypes.h>
 
 
-typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Imu, morai_msgs::GPSMessage> Local_Policy;
-typedef message_filters::Synchronizer<Local_Policy> local_sync;
+typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Imu, morai_msgs::GPSMessage> Local_Policy2;
+typedef message_filters::Synchronizer<Local_Policy2> local_sync2;
 #define PI 3.14159265
 
-class Local{
+class Local_gt{
 private:
 
     ros::NodeHandle nh;
     message_filters::Subscriber<sensor_msgs::Imu> sub_imu;
     message_filters::Subscriber<morai_msgs::GPSMessage> sub_gps;
-    boost::shared_ptr<local_sync> sync;
+    boost::shared_ptr<local_sync2> sync2;
     
     ros::Subscriber sub_ndt_local;
 
@@ -61,18 +61,16 @@ private:
 
 public:
 
-    Local():
+    Local_gt():
         nh("~"){
 
         sub_imu.subscribe(nh, "/imu", 100);
-        sub_gps.subscribe(nh, "/gps_test", 100);
+        sub_gps.subscribe(nh, "/gps", 100);
 
-        sync.reset(new local_sync(Local_Policy(10), sub_imu, sub_gps));
-        sync->registerCallback(boost::bind(&Local::gpscallback, this, _1, _2));
+        sync2.reset(new local_sync2(Local_Policy2(10), sub_imu, sub_gps));
+        sync2->registerCallback(boost::bind(&Local_gt::gpscallback, this, _1, _2));
 
-        pub_local =  nh.advertise<geometry_msgs::PoseStamped>("/local_msgs_for_vision2", 1000);
-        pub_local2 =  nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/local_msgs_for_vision_for_initialization", 1000);
-        sub_ndt_local = nh.subscribe<geometry_msgs::PoseStamped>("/ndt_pose",10, &Local::ndtLocalHandler,this);
+        pub_local =  nh.advertise<geometry_msgs::PoseStamped>("/local_msgs_for_vision_gt", 1000);
 
         MappedTrans.frame_id_ = "/camera_init";
         MappedTrans.child_frame_id_ = "/camera";
@@ -94,7 +92,7 @@ public:
     void gpscallback(const boost::shared_ptr<const sensor_msgs::Imu>& Imu_msg,
                      const boost::shared_ptr<const morai_msgs::GPSMessage>& Gps_msg){
                         
-        ROS_INFO_STREAM("\033[1;32m" << "Local Working..."<< "\033[0m");
+        ROS_INFO_STREAM("\033[1;32m" << "Local GT Working..."<< "\033[0m");
         
         imucallback(Imu_msg);
         
@@ -104,7 +102,6 @@ public:
         lon_ = Gps_msg->longitude;
         alt_ = Gps_msg->altitude;
 
-        if(lat_ != 0 && lon_ != 0){
 
             GC.initialiseReference(37.4193122129, 127.125659528, 1.56630456448);
             GC.geodetic2Enu(lat_,lon_,alt_,&e_,&n_,&u_);
@@ -119,36 +116,10 @@ public:
             data.pose.orientation.z = yaw;
             data.pose.orientation.w = 0.0; // 0은 센서 정상작동시 1은 비정상 작동시(gps 음영)
 
-            measurement_pack.raw_measurements_<< e_, n_;
-
             pub_local.publish(data);
             Non_GPS_Flag = true;
 
             publishTF(Gps_msg->header.stamp, e_, n_);
-
-
-        }else{
-
-            if(Non_GPS_Flag == true){
-                data2.header.stamp = ros::Time::now();
-                data2.header.frame_id = "world";
-                data2.pose.pose.position.x = e_;
-                data2.pose.pose.position.y = n_;
-
-                geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromRollPitchYaw
-                                          (roll, pitch, yaw);
-
-                data2.pose.pose.orientation = odom_quat;
-                pub_local2.publish(data2);
-
-                Non_GPS_Flag = false;
-            }
-
-            publish_EKF_local(Imu_msg);
-
-            publishTF(Gps_msg->header.stamp, ndt_msgs.pose.position.x, ndt_msgs.pose.position.y);
-
-        }
 
     }
 
@@ -165,45 +136,6 @@ public:
 
     }
 
-    void ndtLocalHandler(const geometry_msgs::PoseStamped::ConstPtr& ndt_local_msgs){
-        ndt_msgs = *ndt_local_msgs;
-
-        measurement_pack.raw_measurements_<< ndt_msgs.pose.position.x, ndt_msgs.pose.position.y;
-
-        geometry_msgs::Quaternion quaternion = ndt_msgs.pose.orientation;
-
-        // Convert geometry_msgs::Quaternion to tf::Quaternion
-        tf::Quaternion tf_quaternion;
-        tf::quaternionMsgToTF(quaternion, tf_quaternion);
-
-        // Compute the roll, pitch, and yaw angles from tf::Quaternion
-        tf::Matrix3x3(tf_quaternion).getRPY(roll, pitch, yaw);
-
-        ndt_msgs.pose.orientation.x = roll;
-        ndt_msgs.pose.orientation.y = pitch;
-        ndt_msgs.pose.orientation.z = yaw;
-        ndt_msgs.pose.orientation.w = 1.0;
-
-        // pub_local.publish(ndt_msgs);
-    }
-    
-    void publish_EKF_local(const sensor_msgs::Imu::ConstPtr& Imu_msg){
-        measurement_pack.timestamp_ = static_cast<long long>(Imu_msg->header.stamp.toNSec());
-        
-        EKF.ProcessMeasurement(measurement_pack);
-
-        pred_local = EKF.ekf_.x_;
-
-        ndt_msgs.header.stamp = Imu_msg->header.stamp;
-        
-        ndt_msgs.pose.orientation.w =1.0;
-
-        ndt_msgs.pose.position.x = pred_local[0];
-        ndt_msgs.pose.position.y = pred_local[1];
-        
-        pub_local.publish(ndt_msgs);
-    }
-
     void publishTF(ros::Time stamp_, double ego_x, double ego_y){
 
         // geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(transformTobeMapped[2]);
@@ -216,8 +148,7 @@ public:
         
         tfBroadcaster.sendTransform(MappedTrans);
     }
-    ~Local(){}
+    ~Local_gt(){}
 };
-
 
 #endif

@@ -153,7 +153,7 @@ public:
 
   void check_status(){
     int count =0;
-    deque<int> count_deque = fixed_queue.getData();
+    std::deque<int> count_deque = fixed_queue.getData();
     int size = count_deque.size();
     int max_size =fixed_queue.getMaxSize(); 
     
