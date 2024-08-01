@@ -377,6 +377,15 @@ public:
         }
         
     }
+    
+    void parking_available_area_visualization(visualization_msgs::MarkerArray& parking_zone_markerarray ,vector<Polygon>& parking_zone){
+        int id =0; 
+
+        for(auto zone : parking_zone){
+            int zone_start =id;
+            getPolygonInfo(id, parking_zone_markerarray,zone, zone_start);
+        }
+    }
 
     void getPolygonInfo(int& id, visualization_msgs::MarkerArray& RCA_Lines ,Polygon &zone, int start_num =0, float r = 1.0, float g = 1.0 ,float b = 0.0){
         geometry_msgs::Point first_points;

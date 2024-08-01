@@ -14,6 +14,7 @@ struct Point {
 
 struct Polygon {
     std::vector<Point> vertices;
+    PointType mid_point;
 };
 
 class Ray_Casting_Algorithm
@@ -25,7 +26,7 @@ public:
 
     ~Ray_Casting_Algorithm(){};
 
-    Polygon readPolygon(string file_path){
+    Polygon readPolygon(string file_path, int mode = 0){
 
         // 텍스트 파일을 읽기 위한 입력 파일 스트림 객체
         std::ifstream input_file(file_path);
@@ -57,9 +58,21 @@ public:
             // 점 정보 추출
             if (values.size() == 3) {
                 Point point = {std::stod(values[1]), std::stod(values[2]) };
+
+                if(mode ==1 ){
+                    points.mid_point.x +=point.x; 
+                    points.mid_point.y +=point.y; 
+                }
+
                 points.vertices.push_back(point);
             }
         }
+
+        if(mode ==1 ){
+            points.mid_point.x /=4;
+            points.mid_point.y /=4;
+        }
+
         // 파일 스트림 닫기
         input_file.close();
 
@@ -94,6 +107,23 @@ public:
         }
         cout <<"Inner" <<"zone :: " << innerPolygon.size() << endl;
         return innerPolygon;
+    }
+    
+    vector<Polygon> readParkingPolygon(){
+
+        vector<Polygon> ParkingPolygon;
+
+        string home_path = getHomeDirectory();
+
+        string folder_path = home_path +  "/2024_SHARK_LiDAR/src/LiDAR_perception/include/RCA/Parking/";
+
+        for (const auto& entry : fs::directory_iterator(folder_path)) {
+            if (fs::is_regular_file(entry) && entry.path().extension() == ".txt") {
+                ParkingPolygon.push_back(readPolygon(entry.path().string(),1));
+            }
+        }
+        cout <<"Parking " <<"zone :: " << ParkingPolygon.size() << endl;
+        return ParkingPolygon;
     }
 
     bool onSegment(Point p, Point q, Point r) {
@@ -165,7 +195,7 @@ public:
         return true;
     }
     
-    vector<Polygon> get_nearest_N_inner_zone(int N, vector<Polygon>& inners, Ego_status& ego_info){
+    vector<Polygon> get_nearest_N_zone(int N, vector<Polygon>& inners, Ego_status& ego_info, int mode = 0){
         map<double,Polygon> inner_zone_info;
 
         vector<Polygon> output;
@@ -173,7 +203,7 @@ public:
         for(auto inner :inners){//각각의 inner zone에 현재 위치에 가장 가까운 점까지의 거리를 추출
             map<double,Point> nearest4points_per_inner_zone;
             
-            double dst_sum;
+            double min_dst;
 
             for(auto point : inner.vertices){
 
@@ -185,9 +215,9 @@ public:
 
             auto iter = nearest4points_per_inner_zone.begin();
 
-            dst_sum = iter->first;
+            min_dst = iter->first;
             
-            inner_zone_info[dst_sum] = inner;
+            inner_zone_info[min_dst] = inner;
         }
         
         auto iter = inner_zone_info.begin();
@@ -198,6 +228,10 @@ public:
                 cout << "N over Inner zone number" << endl;
                 return output;
             }
+
+            if(mode == 1 && iter->first >10){
+                continue;
+            }
             output.push_back(iter->second);
             ++iter;
 
@@ -206,6 +240,39 @@ public:
         return output;
     }
 
+    vector<Polygon> get_available_parking_area(vector<Polygon>& parking_zone, pcl::PointCloud<PointType>::Ptr roi_cloud, Ego_status& ego_info ){
+
+        pcl::KdTreeFLANN<PointType> RPC_kdtree;
+        RPC_kdtree.setInputCloud(roi_cloud);
+
+        vector<Polygon> near_ego_parking_zone = get_nearest_N_zone(10,parking_zone,ego_info,1);//10m이상 떨어진 parking zone에 대해서는 판단하지 않는다.
+        
+        vector<Polygon> parking_available_area;
+        for(auto parking_zone : near_ego_parking_zone){
+
+            bool empty_parkin_zone = true;
+
+            int point_num =5;
+            std::vector<int> indices;
+            std::vector<float> distances;
+
+
+            RPC_kdtree.nearestKSearch(parking_zone.mid_point, point_num ,indices, distances);
+
+            for(int i=0;i <point_num; i++){
+                Point p = {roi_cloud->points[indices[i]].x, roi_cloud->points[indices[i]].y}; 
+
+                if(isInsidePolygon(parking_zone.vertices, p)){
+                    empty_parkin_zone = false;
+                    break;
+                }
+            }
+
+            if(empty_parkin_zone) parking_available_area.push_back(parking_zone);
+
+        }
+        return parking_available_area;
+    }
 
     void set_ROI_RCA(pcl::PointCloud<PointType>::Ptr input_cloud, pcl::PointCloud<PointType>::Ptr output_cloud, Polygon& outer, vector<Polygon>& inners, Ego_status& ego_info){
 

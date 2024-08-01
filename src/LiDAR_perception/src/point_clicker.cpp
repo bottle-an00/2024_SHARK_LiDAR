@@ -134,7 +134,7 @@ public:
 
 vtkStandardNewMacro(PointPickingInteractorStyle);
 
-void userSetup()
+void userSetup(int& mode)
 {
     std::cout << "Enter 1 to open a specific file or 2 or 3 to create a new file in a specific folder: ";
     int choice;
@@ -171,6 +171,8 @@ void userSetup()
     {
         std::string folderPath = homeDirectory + "/2024_SHARK_LiDAR/src/LiDAR_perception/include/RCA/Parking/";
         
+        mode = 1;
+
         // // 폴더 내 파일 갯수 파악
         int fileCount = 0;
         for (const auto& entry : fs::directory_iterator(folderPath))
@@ -200,7 +202,9 @@ void userSetup()
 
 int main(int argc, char** argv)
 {
-    userSetup();
+    int mode =0;
+
+    userSetup(mode);
 
     // PCD 파일 경로 설정
     std::string pcd_file_path = homeDirectory + "/2024_SHARK_LiDAR/src/LiDAR_perception/maps/filtered/filtered_Ground.pcd";
@@ -236,16 +240,19 @@ int main(int argc, char** argv)
     // PCL 시각화 객체 생성
     pcl::visualization::PCLVisualizer::Ptr viewer(new pcl::visualization::PCLVisualizer("3D Viewer"));
     viewer->setBackgroundColor(0, 0, 0);
-    
-    viewer->addPointCloud<pcl::PointXYZRGB>(cloud, "ground cloud");
-    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "ground cloud");
+    if(mode == 0){
+        viewer->addPointCloud<pcl::PointXYZRGB>(cloud, "ground cloud");
+        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "ground cloud");
 
-    viewer->addPointCloud<pcl::PointXYZRGB>(cloud4nonground, "nonground cloud");
-    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "nonground cloud");
-    
-    viewer->addPointCloud<pcl::PointXYZRGB>(cloud4lane, "lane cloud");
-    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "lane cloud");
+        viewer->addPointCloud<pcl::PointXYZRGB>(cloud4nonground, "nonground cloud");
+        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "nonground cloud");
 
+        viewer->addPointCloud<pcl::PointXYZRGB>(cloud4lane, "lane cloud");
+        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "lane cloud");
+    }else if(mode ==1){
+        viewer->addPointCloud<pcl::PointXYZRGB>(cloud4lane, "lane cloud");
+        viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "lane cloud");
+    }
     viewer->addCoordinateSystem(1.0);
     viewer->initCameraParameters();
     

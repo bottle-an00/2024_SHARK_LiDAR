@@ -29,6 +29,7 @@ private:
     ros::Publisher pubNearestInner;
     ros::Publisher pubEKFcenter;
     ros::Publisher pubEKFboundary;
+    ros::Publisher pubParkingZone;
 
     pcl::PointCloud<PointType>::Ptr groundCloudIn;// patchwork++에 의해 들어온 ground cloud를 저장
     pcl::PointCloud<PointType>::Ptr nongroundCloudIn;// patchwork++에 의해 들어온  non ground cloud를 저장
@@ -44,6 +45,7 @@ private:
     visualization_msgs::MarkerArray normal_vectors;    
     visualization_msgs::MarkerArray outer_zone;    
     visualization_msgs::MarkerArray nearest_inner_zone;    
+    visualization_msgs::MarkerArray parking_zone_markerarray;    
 
     visualization_msgs::MarkerArray ekf_obj_center;    
     visualization_msgs::MarkerArray ekf_obj_boundary;    
@@ -74,6 +76,9 @@ private:
     vector<Polygon> inners;
     vector<Polygon> near_ego_inners;
 
+    vector<Polygon> parking_zone;
+    vector<Polygon> available_parkin_zone;
+
     float dx, dy, dyaw;
 public:
 
@@ -96,6 +101,7 @@ public:
         
         pubOuter  =  nh.advertise<visualization_msgs::MarkerArray>("/outer_zone", 1);
         pubNearestInner =  nh.advertise<visualization_msgs::MarkerArray>("/nearest_Inner_zone", 1);
+        pubParkingZone =  nh.advertise<visualization_msgs::MarkerArray>("/parking_zone", 1);
 
         pubEKFcenter = nh.advertise<visualization_msgs::MarkerArray>("/EKF_obj/info", 1);
         pubEKFboundary = nh.advertise<visualization_msgs::MarkerArray>("/EKF_obj/boundary", 1);
@@ -130,6 +136,7 @@ public:
 
         outer = RCA.readOuterPolygon();
         inners = RCA.readInnerPolygon();
+        parking_zone = RCA.readParkingPolygon();
     }
 
     void resetParameters(){
@@ -209,11 +216,15 @@ public:
         copyPointCloud(laserCloudMsg);
         //
         auto start_time = std::chrono::high_resolution_clock::now();
-        
+
         //get ROICloud with RCA
-        near_ego_inners = RCA.get_nearest_N_inner_zone(6,inners,ego_info);
+        near_ego_inners = RCA.get_nearest_N_zone(6,inners,ego_info);
 
         RCA.set_ROI_RCA(nongroundCloudIn, ROICloud,outer,near_ego_inners,ego_info);
+        //
+        
+        //parking_area_detection
+        available_parkin_zone = RCA.get_available_parking_area(parking_zone, ROICloud, ego_info);
         //
 
         //Object Detection
@@ -411,6 +422,10 @@ public:
         if(pubNearestInner.getNumSubscribers() != 0){
             Vt.nearestNInnerZone_visualization(nearest_inner_zone,near_ego_inners);
             pubNearestInner.publish(nearest_inner_zone);
+        }
+        if(pubParkingZone.getNumSubscribers() != 0){
+            Vt.parking_available_area_visualization(parking_zone_markerarray,available_parkin_zone);
+            pubParkingZone.publish(parking_zone_markerarray);
         }
         
     }
