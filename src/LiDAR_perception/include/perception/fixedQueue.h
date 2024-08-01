@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <deque>
-#define SAVE_FRAME_NUM 5
+#define SAVE_FRAME_NUM 2
 
 template <typename T>
 

@@ -27,6 +27,8 @@ private:
     ros::Publisher pubVector;
     ros::Publisher pubOuter;
     ros::Publisher pubNearestInner;
+    ros::Publisher pubEKFcenter;
+    ros::Publisher pubEKFboundary;
 
     pcl::PointCloud<PointType>::Ptr groundCloudIn;// patchwork++에 의해 들어온 ground cloud를 저장
     pcl::PointCloud<PointType>::Ptr nongroundCloudIn;// patchwork++에 의해 들어온  non ground cloud를 저장
@@ -43,6 +45,9 @@ private:
     visualization_msgs::MarkerArray outer_zone;    
     visualization_msgs::MarkerArray nearest_inner_zone;    
 
+    visualization_msgs::MarkerArray ekf_obj_center;    
+    visualization_msgs::MarkerArray ekf_obj_boundary;    
+
     vector<Object_info> detected_objects;
     vector<Object_info> object_DB;
 
@@ -55,6 +60,8 @@ private:
     vector<VectorXd> pred_position;
     vector<MeasurementPackage> measurement_pack_list;
     MeasurementPackage meas_package;
+    
+    FixedSizeQueue<vector<int>> id_list_que;
 
     vector<int> id_list;
     
@@ -90,6 +97,9 @@ public:
         pubOuter  =  nh.advertise<visualization_msgs::MarkerArray>("/outer_zone", 1);
         pubNearestInner =  nh.advertise<visualization_msgs::MarkerArray>("/nearest_Inner_zone", 1);
 
+        pubEKFcenter = nh.advertise<visualization_msgs::MarkerArray>("/EKF_obj/info", 1);
+        pubEKFboundary = nh.advertise<visualization_msgs::MarkerArray>("/EKF_obj/boundary", 1);
+
         allocateMemory();
         resetParameters();
     }
@@ -115,6 +125,8 @@ public:
         normal_vectors.markers.clear();
         outer_zone.markers.clear();
         nearest_inner_zone.markers.clear();
+        ekf_obj_center.markers.clear();
+        ekf_obj_boundary.markers.clear();
 
         outer = RCA.readOuterPolygon();
         inners = RCA.readInnerPolygon();
@@ -139,7 +151,9 @@ public:
         normal_vectors.markers.clear();
         outer_zone.markers.clear();
         nearest_inner_zone.markers.clear();
-        
+        ekf_obj_center.markers.clear();
+        ekf_obj_boundary.markers.clear();
+
         near_ego_inners.clear();
 
     }
@@ -228,8 +242,9 @@ public:
         
         Tt.process_matching(detected_objects, object_DB, id_list);
 
+        id_list_que.push(id_list);
+        
         //measurement 정보 입력 
-
         for(auto id : id_list){
             meas_package.raw_measurements_<< object_DB[id].mid_point.x, object_DB[id].mid_point.y;
             meas_package.timestamp_ = static_cast<long long>(cloudHeader.stamp.toNSec());
@@ -243,6 +258,32 @@ public:
             cout << id <<endl;
         }
         
+        getIdList();
+        
+        if(pubEKFcenter.getNumSubscribers() != 0){
+            Vt.visual_kalman_info_kf(id_list,pred_position,object_DB,ekf_obj_center);
+            pubEKFcenter.publish(ekf_obj_center);
+        }
+
+        if(pubEKFboundary.getNumSubscribers() != 0){
+            Vt.visual_EKF_OBJ_boundary(id_list,object_DB,ekf_obj_boundary);
+            pubEKFboundary.publish(ekf_obj_boundary);
+        }
+        
+
+    }
+
+    void getIdList(){
+        deque<vector<int>> id_vec;
+        id_vec = id_list_que.getData();
+        id_list.clear();
+
+        for(auto vec : id_vec){
+            id_list.insert(id_list.end(),vec.begin(),vec.end());
+        }
+        
+        sort(id_list.begin(), id_list.end());
+        id_list.erase(unique(id_list.begin(),id_list.end()), id_list.end());
     }
 
     void detect_object(vector<pcl::PointCloud<PointType>::Ptr> input_cloud_vec){
@@ -371,6 +412,7 @@ public:
             Vt.nearestNInnerZone_visualization(nearest_inner_zone,near_ego_inners);
             pubNearestInner.publish(nearest_inner_zone);
         }
+        
     }
     
 };

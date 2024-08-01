@@ -2,6 +2,7 @@
 #define _TRACKING_TOOLS_
 
 #include "perception/data_struction.h"
+#include "perception/fixedQueue.h"
 
 using FeatureType = pcl::FPFHSignature33;
 
@@ -174,10 +175,10 @@ public:
 
                 int obj_id;
 
-                if(distances[0] < 3){
+                if(distances[0] < 2){
                     int id_  = static_cast<int>(detected_object_cloud->points[indices[0]].intensity);
 
-                    if(cal_iou(object,Object_DB, id_) > 0) {
+                    // if(cal_iou(object,Object_DB, id_) > 0) {
 
                         Object_DB[id_].min_point = object.min_point;
                         Object_DB[id_].max_point = object.max_point;
@@ -188,14 +189,14 @@ public:
 
                         obj_id = id_;
 
-                    }else{
-                        //새로운 object 추가
-                        obj_id = current_max_id+1;
+                    // }else{
+                    //     //새로운 object 추가
+                    //     obj_id = current_max_id+1;
 
-                        object.id =obj_id;
-                        Object_DB[obj_id] = object;
-                        current_max_id++;
-                    }
+                    //     object.id =obj_id;
+                    //     Object_DB[obj_id] = object;
+                    //     current_max_id++;
+                    // }
 
                 }else{
                     //새로운 object 추가
