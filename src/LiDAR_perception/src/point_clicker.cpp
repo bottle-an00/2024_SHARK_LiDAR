@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 #include <boost/filesystem.hpp>
+#include "perception/data_struction.h"
 
 namespace fs = boost::filesystem;
 
@@ -135,19 +136,19 @@ vtkStandardNewMacro(PointPickingInteractorStyle);
 
 void userSetup()
 {
-    std::cout << "Enter 1 to open a specific file or 2 to create a new file in a specific folder: ";
+    std::cout << "Enter 1 to open a specific file or 2 or 3 to create a new file in a specific folder: ";
     int choice;
     std::cin >> choice;
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // 입력 버퍼 비우기
 
     if (choice == 1)
     {
-        std::string filePath = "/home/jba/2024_SHARK_LiDAR/src/LiDAR_perception/include/RCA/Outer.txt";
+        std::string filePath = homeDirectory + "/2024_SHARK_LiDAR/src/LiDAR_perception/include/RCA/Outer.txt";
         outputFilePath = filePath;
     }
     else if (choice == 2)
     {
-        std::string folderPath = "/home/jba/2024_SHARK_LiDAR/src/LiDAR_perception/include/RCA/Inner/";
+        std::string folderPath = homeDirectory + "/2024_SHARK_LiDAR/src/LiDAR_perception/include/RCA/Inner/";
         
         // // 폴더 내 파일 갯수 파악
         int fileCount = 0;
@@ -161,6 +162,27 @@ void userSetup()
         
         // 새 파일 이름 설정
         outputFilePath = folderPath + "/zone::" + std::to_string(fileCount)+ ".txt";
+
+        // 새 파일을 생성하고 빈 파일로 초기화
+        std::ofstream newFile(outputFilePath);
+        newFile.close();
+    }
+    else if (choice == 3)
+    {
+        std::string folderPath = homeDirectory + "/2024_SHARK_LiDAR/src/LiDAR_perception/include/RCA/Parking/";
+        
+        // // 폴더 내 파일 갯수 파악
+        int fileCount = 0;
+        for (const auto& entry : fs::directory_iterator(folderPath))
+        {
+            if (fs::is_regular_file(entry))
+            {
+                fileCount++;
+            }
+        }
+        
+        // 새 파일 이름 설정
+        outputFilePath = folderPath + "/parking_zone_" + std::to_string(fileCount)+ ".txt";
 
         // 새 파일을 생성하고 빈 파일로 초기화
         std::ofstream newFile(outputFilePath);
@@ -181,9 +203,9 @@ int main(int argc, char** argv)
     userSetup();
 
     // PCD 파일 경로 설정
-    std::string pcd_file_path = "/home/jba/2024_SHARK_LiDAR/maps/filtered/filtered_Ground.pcd";
-    std::string pcd_file_path2 = "/home/jba/2024_SHARK_LiDAR/maps/filtered/filtered_NongroundMap.pcd";
-    std::string pcd_file_path3 = "/home/jba/2024_SHARK_LiDAR/maps/filtered/filtered_Lane.pcd";
+    std::string pcd_file_path = homeDirectory + "/2024_SHARK_LiDAR/src/LiDAR_perception/maps/filtered/filtered_Ground.pcd";
+    std::string pcd_file_path2 = homeDirectory + "/2024_SHARK_LiDAR/src/LiDAR_perception/maps/filtered/filtered_NongroundMap.pcd";
+    std::string pcd_file_path3 = homeDirectory + "/2024_SHARK_LiDAR/src/LiDAR_perception/maps/filtered/filtered_Lane.pcd";
 
     // PCD 파일 읽기
     if (pcl::io::loadPCDFile<pcl::PointXYZRGB>(pcd_file_path, *cloud) == -1 || pcl::io::loadPCDFile<pcl::PointXYZRGB>(pcd_file_path2, *cloud4nonground) == -1 
