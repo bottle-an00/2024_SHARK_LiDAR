@@ -2,13 +2,12 @@
     <!--- Sim Time -->
     <param name="/use_sim_time" value="true" />
     
-    <node pkg="tf" type="static_transform_publisher" name="camera_init_to_map"  args="0 0 0 0 0 0 /map    /camera_init 10" />
-    <node pkg="tf" type="static_transform_publisher" name="base_link_to_camera" args="0 0 0 0 0 0 /camera /base_link   10" /> 
-    
+    <node pkg="tf" type="static_transform_publisher" name="base_link_to_map"  args="0 0 0 0 0 0 /map    /base_link 10" />
+
     <node pkg="LiDAR_perception" type="local"   name="local"  output="screen"/>
 
     <node pkg="LiDAR_perception" type="main"   name="main"  output="screen"/>
-
+        
     <node pkg="LiDAR_perception" type="pub_map.py" name="pcdmap" output="screen"/>
 
 </launch>

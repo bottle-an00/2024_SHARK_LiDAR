@@ -84,7 +84,6 @@ extern const string fileDirectory = homeDirectory + "/2024_SHARK_LiDAR/src/LiDAR
 struct Ego_status{
     bool is_initialize = false;
     /*x,y는 동일, z는 yaw를 의미*/
-    PointType prev;
     PointType curr;
     
     double roll;

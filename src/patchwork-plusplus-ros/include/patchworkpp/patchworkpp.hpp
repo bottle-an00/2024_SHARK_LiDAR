@@ -91,16 +91,16 @@ public:
         node_handle_.param("enable_RVPF", enable_RVPF_, true);
         node_handle_.param("enable_TGR", enable_TGR_, true);
 
-        ROS_INFO("Sensor Height: %f", sensor_height_);
-        ROS_INFO("Num of Iteration: %d", num_iter_);
-        ROS_INFO("Num of LPR: %d", num_lpr_);
-        ROS_INFO("Num of min. points: %d", num_min_pts_);
-        ROS_INFO("Seeds Threshold: %f", th_seeds_);
-        ROS_INFO("Distance Threshold: %f", th_dist_);
-        ROS_INFO("Max. range:: %f", max_range_);
-        ROS_INFO("Min. range:: %f", min_range_);
-        ROS_INFO("Normal vector threshold: %f", uprightness_thr_);
-        ROS_INFO("adaptive_seed_selection_margin: %f", adaptive_seed_selection_margin_);
+        // ROS_INFO("Sensor Height: %f", sensor_height_);
+        // ROS_INFO("Num of Iteration: %d", num_iter_);
+        // ROS_INFO("Num of LPR: %d", num_lpr_);
+        // ROS_INFO("Num of min. points: %d", num_min_pts_);
+        // ROS_INFO("Seeds Threshold: %f", th_seeds_);
+        // ROS_INFO("Distance Threshold: %f", th_dist_);
+        // ROS_INFO("Max. range:: %f", max_range_);
+        // ROS_INFO("Min. range:: %f", min_range_);
+        // ROS_INFO("Normal vector threshold: %f", uprightness_thr_);
+        // ROS_INFO("adaptive_seed_selection_margin: %f", adaptive_seed_selection_margin_);
 
         // CZM denotes 'Concentric Zone Model'. Please refer to our paper
         node_handle_.getParam("czm/num_zones", num_zones_);
@@ -118,19 +118,19 @@ public:
             throw invalid_argument("Some parameters are wrong! Check the elevation/flatness_thresholds");
         }
 
-        cout << (boost::format("Num. sectors: %d, %d, %d, %d") % num_sectors_each_zone_[0] % num_sectors_each_zone_[1] %
-                 num_sectors_each_zone_[2] %
-                 num_sectors_each_zone_[3]).str() << endl;
-        cout << (boost::format("Num. rings: %01d, %01d, %01d, %01d") % num_rings_each_zone_[0] %
-                 num_rings_each_zone_[1] %
-                 num_rings_each_zone_[2] %
-                 num_rings_each_zone_[3]).str() << endl;
-        cout << (boost::format("elevation_thr_: %0.4f, %0.4f, %0.4f, %0.4f ") % elevation_thr_[0] % elevation_thr_[1] %
-                 elevation_thr_[2] %
-                 elevation_thr_[3]).str() << endl;
-        cout << (boost::format("flatness_thr_: %0.4f, %0.4f, %0.4f, %0.4f ") % flatness_thr_[0] % flatness_thr_[1] %
-                 flatness_thr_[2] %
-                 flatness_thr_[3]).str() << endl;
+        // cout << (boost::format("Num. sectors: %d, %d, %d, %d") % num_sectors_each_zone_[0] % num_sectors_each_zone_[1] %
+        //          num_sectors_each_zone_[2] %
+        //          num_sectors_each_zone_[3]).str() << endl;
+        // cout << (boost::format("Num. rings: %01d, %01d, %01d, %01d") % num_rings_each_zone_[0] %
+        //          num_rings_each_zone_[1] %
+        //          num_rings_each_zone_[2] %
+        //          num_rings_each_zone_[3]).str() << endl;
+        // cout << (boost::format("elevation_thr_: %0.4f, %0.4f, %0.4f, %0.4f ") % elevation_thr_[0] % elevation_thr_[1] %
+        //          elevation_thr_[2] %
+        //          elevation_thr_[3]).str() << endl;
+        // cout << (boost::format("flatness_thr_: %0.4f, %0.4f, %0.4f, %0.4f ") % flatness_thr_[0] % flatness_thr_[1] %
+        //          flatness_thr_[2] %
+        //          flatness_thr_[3]).str() << endl;
         num_rings_of_interest_ = elevation_thr_.size();
 
         node_handle_.param("visualize", visualize_, true);
@@ -164,7 +164,7 @@ public:
                         2 * M_PI / num_sectors_each_zone_.at(2),
                         2 * M_PI / num_sectors_each_zone_.at(3)};
 
-        cout << "INITIALIZATION COMPLETE" << endl;
+        // cout << "INITIALIZATION COMPLETE" << endl;
 
         for (int i = 0; i < num_zones_; i++) {
             Zone z;

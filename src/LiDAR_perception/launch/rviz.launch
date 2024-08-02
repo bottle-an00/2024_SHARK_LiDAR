@@ -1,6 +1,10 @@
 <launch>
+    <arg name="multi" default='false' />
 
- <!--- Run Rviz-->
-    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find LiDAR_perception)/launch/LiDAR_perception.rviz" />
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find LiDAR_perception)/launch/rviz/single_LiDAR_perception.rviz"
+      if="$(eval arg('multi') == false)"/>
 
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find LiDAR_perception)/launch/rviz/multi_LiDAR_perception.rviz"
+      if="$(eval arg('multi') != false)"/>
+      
 </launch>

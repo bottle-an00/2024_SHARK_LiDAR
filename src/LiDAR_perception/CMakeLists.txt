@@ -30,6 +30,10 @@ add_executable(main src/main.cpp )
 add_dependencies(main ${catkin_EXPORTED_TARGETS})
 target_link_libraries(main ${catkin_LIBRARIES}${PCL_LIBRARIES})
 
+add_executable(multi_LiDAR src/multi_LiDAR.cpp )
+add_dependencies(multi_LiDAR ${catkin_EXPORTED_TARGETS})
+target_link_libraries(multi_LiDAR ${catkin_LIBRARIES}${PCL_LIBRARIES})
+
 add_executable(local src/local.cpp )
 add_dependencies(local ${catkin_EXPORTED_TARGETS})
 target_link_libraries(local ${catkin_LIBRARIES}${PCL_LIBRARIES})

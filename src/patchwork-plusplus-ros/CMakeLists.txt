@@ -28,6 +28,7 @@ find_package(catkin REQUIRED COMPONENTS
         sensor_msgs
         message_generation
         jsk_recognition_msgs
+        
 )
 
 find_package(OpenCV REQUIRED)
@@ -49,8 +50,8 @@ if (OPENMP_FOUND)
 endif()
 
 catkin_package(
-        INCLUDE_DIRS
-        LIBRARIES
+        INCLUDE_DIRS 
+        LIBRARIES 
         CATKIN_DEPENDS roscpp rospy std_msgs
 )
 
@@ -58,6 +59,7 @@ include_directories(
         ${catkin_INCLUDE_DIRS}
         ${PCL_INCLUDE_DIRS}
         ${OpenCV_INCLUDE_DIRS}
+        ${lidar_perception_INCLUDE_DIRS}
         include
 )
 

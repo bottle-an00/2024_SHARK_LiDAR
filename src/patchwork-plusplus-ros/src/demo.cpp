@@ -39,8 +39,14 @@ void callbackCloud(const sensor_msgs::PointCloud2::Ptr &cloud_msg)
 
     PatchworkppGroundSeg->estimate_ground(pc_curr, pc_ground, pc_non_ground, time_taken);
 
-    ROS_INFO_STREAM("\033[1;32m" << "Input PointCloud: " << pc_curr.size() << " -> Ground: " << pc_ground.size() <<  "/ NonGround: " << pc_non_ground.size()
-         << " (running_time: " << time_taken << " sec)" << "\033[0m");
+    // patchworkpp_process_time = time_taken;
+
+    // patchworkpp_input_size = pc_curr.size();
+    // patchworkpp_ground_size = pc_ground.size();
+    // patchworkpp_nonground = pc_non_ground.size();
+
+    // ROS_INFO_STREAM("\033[1;32m" << "Input PointCloud: " << pc_curr.size() << " -> Ground: " << pc_ground.size() <<  "/ NonGround: " << pc_non_ground.size()
+    //      << " (running_time: " << time_taken << " sec)" << "\033[0m");
 
     pub_cloud.publish(cloud2msg(pc_curr, cloud_msg->header.stamp, cloud_msg->header.frame_id));
     pub_ground.publish(cloud2msg(pc_ground, cloud_msg->header.stamp, cloud_msg->header.frame_id));
@@ -56,7 +62,6 @@ int main(int argc, char**argv) {
     std::string cloud_topic;
     pnh.param<string>("cloud_topic", cloud_topic, "/pointcloud");
 
-    cout << "Operating patchwork++..." << endl;
     PatchworkppGroundSeg.reset(new PatchWorkpp<PointType>(&pnh));
 
     pub_cloud       = pnh.advertise<sensor_msgs::PointCloud2>("cloud", 100, true);

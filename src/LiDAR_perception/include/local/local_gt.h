@@ -46,11 +46,6 @@ private:
     tf::StampedTransform MappedTrans;
     tf::TransformBroadcaster tfBroadcaster;
 
-    tf::StampedTransform map_2_camera_init_Trans;
-    tf::TransformBroadcaster tfBroadcasterMap2CameraInit;
-
-    tf::StampedTransform camera_2_base_link_Trans;
-    tf::TransformBroadcaster tfBroadcasterCamera2Baselink;
     bool Non_GPS_Flag = false;
 
     geometry_msgs::PoseStamped ndt_msgs;
@@ -72,14 +67,8 @@ public:
 
         pub_local =  nh.advertise<geometry_msgs::PoseStamped>("/local_msgs_for_vision_gt", 1000);
 
-        MappedTrans.frame_id_ = "/camera_init";
-        MappedTrans.child_frame_id_ = "/camera";
-
-        map_2_camera_init_Trans.frame_id_ = "/map";
-        map_2_camera_init_Trans.child_frame_id_ = "/camera_init";
-
-        camera_2_base_link_Trans.frame_id_ = "/camera";
-        camera_2_base_link_Trans.child_frame_id_ = "/base_link";
+        MappedTrans.frame_id_ = "/map";
+        MappedTrans.child_frame_id_ = "/base_link";
 
         allocateMemory();
     }

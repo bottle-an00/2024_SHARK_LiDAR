@@ -176,9 +176,6 @@ public:
     }
 
     void localMsgHandler(const geometry_msgs::PoseStamped::ConstPtr& localMsg){
-        if(ego_info.is_initialize){ 
-            ego_info.prev = ego_info.curr;
-        }
 
         ego_info.curr.x = localMsg->pose.position.x;
 

@@ -39,9 +39,10 @@ catkin_package(
         pcl_conversions
         pcl_ros
         message_generation
+        
 )
 
-include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(include ${catkin_INCLUDE_DIRS} ${LiDAR_perception_INCLUDE_DIRS})
 
 ###########
 ## Build ##
