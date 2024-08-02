@@ -80,11 +80,23 @@ public:
         
         pcl::PointCloud<PointType>::Ptr vlp16_r(new pcl::PointCloud<PointType>());
         pcl::fromROSMsg(*vlp16_r_msg, *vlp16_r);
+        pcl::VoxelGrid<PointType> sor;
+        sor.setInputCloud(vlp16_r);  
+        sor.setLeafSize(0.10f, 0.10f, 0.10f);  
+        
+        sor.filter(*vlp16_r);
+
         *Lidar_Data += *transformPointCloud(vlp16_r,vlp16_r_info);
 
         pcl::PointCloud<PointType>::Ptr vlp16_l(new pcl::PointCloud<PointType>());
         pcl::fromROSMsg(*vlp16_l_msg, *vlp16_l);
+        sor.setInputCloud(vlp16_l);  
+        sor.setLeafSize(0.10f, 0.10f, 0.10f);  
+        
+        sor.filter(*vlp16_l);
         *Lidar_Data += *transformPointCloud(vlp16_l,vlp16_l_info);
+
+        
 
         publishPC2();
     }

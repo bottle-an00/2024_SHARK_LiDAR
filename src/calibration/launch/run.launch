@@ -1,0 +1,13 @@
+<launch>
+    
+    <!--- Sim Time -->
+    <param name="/use_sim_time" value="true" />
+
+    <!--- Run Rviz-->
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find calibration)/launch/calibration.rviz" />
+
+    <!--- LeGO-LOAM -->    
+    <node pkg="calibration" type="cloud_maker"    name="cloud_maker"    output="screen"/>
+    <node pkg="calibration" type="sync"    name="sync"    output="screen"/>
+
+</launch>
