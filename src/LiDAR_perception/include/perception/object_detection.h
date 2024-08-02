@@ -6,6 +6,8 @@
 #include "RCA/Ray_Casting_Algorithm.h"
 #include "tracking_tools/tracking_tools.h"
 
+#include "perception/process_info.h"
+
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
@@ -238,8 +240,10 @@ public:
 
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
-
-        ROS_INFO_STREAM("\033[1;32m" << "OD Working... process time:: "<<duration.count() << " ms" <<  "\033[0m");
+        
+        OD_working =true;
+        OD_process_time = duration.count();
+        // ROS_INFO_STREAM("\033[1;32m" << "OD Working... process time:: "<<duration.count() << " ms" <<  "\033[0m");
 
         publishCloud();
 
@@ -263,7 +267,7 @@ public:
 
             pred_position[id] = EKFs[id].ekf_.x_;
             *RegisteredOBJCloud += *(object_DB[id].obj_cloud);
-            cout << id <<endl;
+            // cout << id <<endl;
         }
         
         getIdList();

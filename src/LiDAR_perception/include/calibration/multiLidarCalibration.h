@@ -9,6 +9,8 @@
 #include <message_filters/time_synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
 
+#include "perception/process_info.h"
+
 typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::PointCloud2, sensor_msgs::PointCloud2, sensor_msgs::PointCloud2> multi_Lidar_policy;
 typedef message_filters::Synchronizer<multi_Lidar_policy> LiDAR_sync;
 
@@ -96,7 +98,7 @@ public:
         sor.filter(*vlp16_l);
         *Lidar_Data += *transformPointCloud(vlp16_l,vlp16_l_info);
 
-        
+        multi_LiDAR_Calibration_working = true;
 
         publishPC2();
     }

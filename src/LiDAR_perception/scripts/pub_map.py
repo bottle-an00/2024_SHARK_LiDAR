@@ -10,6 +10,7 @@ import open3d as o3d
 import numpy as np
 import os
 
+
 def read_pcd_file(pcd_file):
     # Check if the file exists
     if os.path.exists(pcd_file):
@@ -55,7 +56,6 @@ def main():
         rospy.Rate(0.01)
         
         while not rospy.is_shutdown():
-            print("----HD_map publining------")
             pub1.publish(read_pcd_file(pcd_files_path[0]))
             pub2.publish(read_pcd_file(pcd_files_path[1]))
             pub3.publish(read_pcd_file(pcd_files_path[2]))

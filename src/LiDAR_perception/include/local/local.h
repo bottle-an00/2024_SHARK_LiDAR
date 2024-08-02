@@ -17,6 +17,7 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_datatypes.h>
 
+#include "perception/process_info.h"
 
 typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Imu, morai_msgs::GPSMessage> Local_Policy;
 typedef message_filters::Synchronizer<Local_Policy> local_sync;
@@ -125,8 +126,10 @@ public:
             Non_GPS_Flag = true;
 
             publishTF(Gps_msg->header.stamp, e_, n_);
-
-
+            local_working = true;
+            ego_location_x = e_;
+            ego_location_y = n_;
+            
         }else{
 
             if(Non_GPS_Flag == true){
@@ -145,6 +148,10 @@ public:
             }
 
             publish_EKF_local(Imu_msg);
+            
+            local_working = true;
+            ego_location_x = ndt_msgs.pose.position.x;
+            ego_location_y = ndt_msgs.pose.position.y;
 
             publishTF(Gps_msg->header.stamp, ndt_msgs.pose.position.x, ndt_msgs.pose.position.y);
 
