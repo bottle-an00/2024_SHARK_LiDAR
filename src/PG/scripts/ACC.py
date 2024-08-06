@@ -35,7 +35,7 @@ if __name__ == "__main__":
     rospy.init_node('vehicle_control')
     pub = rospy.Publisher('/ctrl_cmd', CtrlCmd, queue_size=10)
     
-    speed =16.0  # 초기 속도 설정
+    speed =20.0  # 초기 속도 설정
     steering_angle = 0.0  # 초기 조향각 설정
     brake = 0.0
     rate = rospy.Rate(10)  # 10Hz

@@ -1,8 +1,7 @@
 <launch>
 
-    <node pkg="tf" type="static_transform_publisher" name="velodyne32e_to_base_link" args="-0.4  0    0      0  0  0          /base_link /velodyne   10" /> 
-    <node pkg="tf" type="static_transform_publisher" name="vlp16_r_to_velodyne32e"   args=" 0   -0.6  -0.05  0  0  0.349066   /velodyne /vlp16_R     10" /> 
-    <node pkg="tf" type="static_transform_publisher" name="vlp16_l_to_velodyne32e"   args=" 0    0.6  -0.05  0  0 -0.349066   /velodyne /vlp16_L     10" /> 
+    <node pkg="tf" type="static_transform_publisher" name="velodyne32e_to_base_link" args="-0.4  0   0      0  0  0          /base_link /velodyne   10" /> 
+    <node pkg="tf" type="static_transform_publisher" name="vlp16_l_to_velodyne32e"   args=" 2.0  0  -0.55   0  0  0          /velodyne  /vlp16      10" /> 
     
     <node pkg="LiDAR_perception" type="multi_LiDAR"   name="multi_LiDAR"  output="screen"/>
         

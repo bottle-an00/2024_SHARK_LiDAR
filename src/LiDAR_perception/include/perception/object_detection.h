@@ -172,8 +172,13 @@ public:
     void groundcloudHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg){
         
         pcl::fromROSMsg(*laserCloudMsg, *groundCloudIn);
-        *groundCloudIn  = *transformPointCloud(groundCloudIn,ego_info);
+        pcl::PointCloud<PointType>::Ptr tmp_ground(new pcl::PointCloud<PointType>);
+        RCA.getOutliar(groundCloudIn,tmp_ground,outer,near_ego_inners,ego_info );
+        
+        //*RegisteredOBJCloud += *tmp_ground;
 
+        *groundCloudIn  = *transformPointCloud(groundCloudIn,ego_info);
+    
         Ground_kdtree.setInputCloud(groundCloudIn);
     }
 
@@ -221,9 +226,13 @@ public:
 
         RCA.set_ROI_RCA(nongroundCloudIn, ROICloud,outer,near_ego_inners,ego_info);
         //
+
+        RCA.getOutliar(nongroundCloudIn,RegisteredOBJCloud,outer,inners,ego_info );
         
         //parking_area_detection
-        available_parkin_zone = RCA.get_available_parking_area(parking_zone, ROICloud, ego_info);
+        if(ROICloud->points.size()>0){
+            available_parkin_zone = RCA.get_available_parking_area(parking_zone, ROICloud, ego_info);
+        }
         //
 
         //Object Detection
@@ -266,7 +275,6 @@ public:
             EKFs[id].ProcessMeasurement(measurement_pack_list[id]);
 
             pred_position[id] = EKFs[id].ekf_.x_;
-            *RegisteredOBJCloud += *(object_DB[id].obj_cloud);
             // cout << id <<endl;
         }
         
@@ -395,7 +403,7 @@ public:
         if (pubROICloud.getNumSubscribers() != 0){
             pcl::toROSMsg(*RegisteredOBJCloud, laserCloudTemp);
             laserCloudTemp.header.stamp = cloudHeader.stamp;
-            laserCloudTemp.header.frame_id ="map";
+            laserCloudTemp.header.frame_id ="base_link";
             pubROICloud.publish(laserCloudTemp);
         }
 

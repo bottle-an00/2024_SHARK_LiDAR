@@ -47,10 +47,10 @@
   <!-- declare arguments with default values -->
   <arg name="calibration" default="$(find velodyne_pointcloud)/params/VLP16db.yaml"/>
   <arg name="device_ip" default="" />
-  <arg name="frame_id" default="vlp16_L" />
+  <arg name="frame_id" default="vlp16" />
   <arg name="manager" default="second_nodelet_manager" />
-  <arg name="max_range" default="130.0" />
-  <arg name="min_range" default="0.4" />
+  <arg name="max_range" default="80.0" />
+  <arg name="min_range" default="2.0" />
   <arg name="pcap" default="" />
   <arg name="port" default="2378" />
   <arg name="read_fast" default="false" />
@@ -81,44 +81,5 @@
   </include>
 </group>
 
-<!-- For Third velodyne -->
-
-<group ns="ns3">
-  <!-- declare arguments with default values -->
-  <arg name="calibration" default="$(find velodyne_pointcloud)/params/VLP16db.yaml"/>
-  <arg name="device_ip" default="" />
-  <arg name="frame_id" default="vlp16_R" />
-  <arg name="manager" default="third_nodelet_manager" />
-  <arg name="max_range" default="130.0" />
-  <arg name="min_range" default="0.4" />
-  <arg name="pcap" default="" />
-  <arg name="port" default="2388" />
-  <arg name="read_fast" default="false" />
-  <arg name="read_once" default="false" />
-  <arg name="repeat_delay" default="0.0" />
-  <arg name="rpm" default="600.0" />
-
-  <!-- start nodelet manager and driver nodelets -->
-  <include file="$(find velodyne_driver)/launch/nodelet_manager.launch">
-    <arg name="device_ip" value="$(arg device_ip)"/>
-    <arg name="frame_id" value="$(arg frame_id)"/>
-    <arg name="manager" value="$(arg manager)" />
-    <arg name="model" value="VLP16"/>
-    <arg name="pcap" value="$(arg pcap)"/>
-    <arg name="port" value="$(arg port)"/>
-    <arg name="read_fast" value="$(arg read_fast)"/>
-    <arg name="read_once" value="$(arg read_once)"/>
-    <arg name="repeat_delay" value="$(arg repeat_delay)"/>
-    <arg name="rpm" value="$(arg rpm)"/>
-  </include>
-
-  <!-- start cloud nodelet -->
-  <include file="$(find velodyne_pointcloud)/launch/cloud_nodelet.launch">
-    <arg name="calibration" value="$(arg calibration)"/>
-    <arg name="manager" value="$(arg manager)" />
-    <arg name="max_range" value="$(arg max_range)"/>
-    <arg name="min_range" value="$(arg min_range)"/>
-  </include>
-</group>
 
 </launch>
