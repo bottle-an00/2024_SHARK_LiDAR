@@ -240,6 +240,43 @@ public:
         return output;
     }
 
+    void get_foward_ROI(path_info path, Polygon& roi_points,int current_index, int N, double width){
+        
+        roi_points.vertices.resize(2*N);
+        cout << "size :: " << roi_points.vertices.size() <<endl;
+
+        for(int i = current_index; i < current_index+N; i++){
+            
+            Point thisPoint,nextPoint;
+            
+            thisPoint.x = path.position[i][0];
+            thisPoint.y = path.position[i][1];
+            if(i < path.position.size()){
+                nextPoint.x = path.position[i+1][0];
+                nextPoint.y = path.position[i+1][1];
+            }else{
+                thisPoint = nextPoint;
+            }
+
+            double dx = nextPoint.x - thisPoint.x;
+            double dy = nextPoint.y - thisPoint.y;
+            double dst = sqrt(dx*dx + dy*dy);
+
+            Point new_Point;
+            new_Point.x = -1*width*dy/dst + thisPoint.x;
+            new_Point.y =    width*dx/dst + thisPoint.y;
+            roi_points.vertices[i-current_index] = new_Point;
+            
+            new_Point.x =    N*dy/dst + thisPoint.x;
+            new_Point.y = -1*N*dx/dst + thisPoint.y;
+
+            roi_points.vertices[2*N-(i-current_index)] = new_Point;
+            cout << i-current_index << endl;
+
+        }
+
+    }
+
     vector<Polygon> get_available_parking_area(vector<Polygon>& parking_zone, pcl::PointCloud<PointType>::Ptr roi_cloud, Ego_status& ego_info ){
 
         pcl::KdTreeFLANN<PointType> RPC_kdtree;
@@ -274,7 +311,7 @@ public:
         return parking_available_area;
     }
 
-    void set_ROI_RCA(pcl::PointCloud<PointType>::Ptr input_cloud, pcl::PointCloud<PointType>::Ptr output_cloud, Polygon& outer, vector<Polygon>& inners, Ego_status& ego_info){
+    void set_ROI_RCA(pcl::PointCloud<PointType>::Ptr input_cloud, pcl::PointCloud<PointType>::Ptr output_cloud, pcl::PointCloud<PointType>::Ptr ndt_cloud, Polygon& outer, vector<Polygon>& inners, Ego_status& ego_info){
 
         pcl::PointCloud<PointType>::Ptr downsampled_cloud(new pcl::PointCloud<PointType>);
         pcl::PointCloud<PointType>::Ptr near_ego_cloud(new pcl::PointCloud<PointType>);
@@ -306,6 +343,9 @@ public:
             
             if(isInside(outer, inners, p)){
                 output_cloud->push_back(near_ego_cloud->points[i]);
+            }else{
+                ndt_cloud->push_back(near_ego_cloud->points[i]);
+
             }
         }
     }

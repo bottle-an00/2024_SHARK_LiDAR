@@ -21,6 +21,8 @@
 
 #include "RCA/Ray_Casting_Algorithm.h"
 
+#include <nav_msgs/Path.h>
+
 using namespace std;
 
 class Visualization_tool

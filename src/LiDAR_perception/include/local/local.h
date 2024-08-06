@@ -69,7 +69,7 @@ public:
         sub_imu.subscribe(nh, "/imu", 100);
         sub_gps.subscribe(nh, "/gps_test", 100);
 
-        sync.reset(new local_sync(Local_Policy(10), sub_imu, sub_gps));
+        sync.reset(new local_sync(Local_Policy(2), sub_imu, sub_gps));
         sync->registerCallback(boost::bind(&Local::gpscallback, this, _1, _2));
 
         pub_local =  nh.advertise<geometry_msgs::PoseStamped>("/local_msgs_for_vision2", 1000);
@@ -213,7 +213,6 @@ public:
 
     void publishTF(ros::Time stamp_, double ego_x, double ego_y){
 
-        // geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromYaw(transformTobeMapped[2]);
         geometry_msgs::Quaternion odom_quat = tf::createQuaternionMsgFromRollPitchYaw
                                   (roll, pitch, yaw);
 

@@ -51,6 +51,8 @@
 #include <cstdlib> //getenv()용도
 #include <boost/filesystem.hpp>
 
+#include <json/json.h>
+
 #define PI 3.14159265
 
 
@@ -81,6 +83,8 @@ extern const string homeDirectory = getHomeDirectory();
 
 extern const string fileDirectory = homeDirectory + "/2024_SHARK_LiDAR/src/LiDAR_perception/maps";
 
+extern const string map_file_path = homeDirectory + "/2024_SHARK_LiDAR/src/LiDAR_perception/path/seongnam_final_global_path.json";
+
 struct Ego_status{
     bool is_initialize = false;
     /*x,y는 동일, z는 yaw를 의미*/
@@ -102,6 +106,61 @@ struct Object_info{
     PointType max_point;
     PointType mid_point;    
 };
+
+struct path_info{
+    vector<VectorXf> position;
+};
+
+void read_path(path_info& path_info){
+
+    std::ifstream file(map_file_path);
+
+    // Check if the file is opened successfully
+    if (!file.is_open()) {
+        std::cerr << "Error opening file." << std::endl;
+        return ;
+    }
+    // Parse the JSON data
+    Json::Value root;
+    file >> root;
+    // Close the file
+    file.close();
+    // Check if the root is an array
+    if (!root.isObject()) {
+        std::cerr << "Invalid JSON format. Root must be an array." << std::endl;
+        return ;
+    }
+
+    path_info.position.resize(root.size());
+    
+    for (int i =0; i< root.size(); i++) {
+        string idx = to_string(i);  
+        path_info.position[i] = VectorXf(3);
+        path_info.position[i][0] = root[idx][0].asDouble();
+        path_info.position[i][1] = root[idx][1].asDouble();
+        path_info.position[i][2] = static_cast<float>(i);
+    }
+
+    std::cout << "Coordinates saved successfully. Size :: " << path_info.position.size() << std::endl;
+}
+
+int index_finder(path_info path_info, Ego_status ego_info, int& cur_idx){
+    int k = path_info.position.size();
+    double min_dist = 100;
+    int index = -1;
+    int step_size = 500;
+    if(k >0){
+        for(int i = std::max(cur_idx - step_size, 0); i < std::min(k, cur_idx + step_size); ++i) {
+            double dist = sqrt((ego_info.curr.x - path_info.position[i][0])*(ego_info.curr.x - path_info.position[i][0])
+                + (ego_info.curr.y - path_info.position[i][1])*(ego_info.curr.y - path_info.position[i][1]));
+            if(dist < min_dist){
+                index = path_info.position[i][2];
+                min_dist = (dist);
+            }
+        }
+    }
+    return index;
+}
 
 pcl::PointCloud<PointType>::Ptr transformPointCloud(pcl::PointCloud<PointType>::Ptr cloudIn, Ego_status& ego_info ){
 
@@ -152,14 +211,14 @@ double cal_diff(PointType saved_Cone , PointType detected_Cone){
 }
 
 double magnitude(const VectorXf& v) {
-    return sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+    return sqrt(v[0] * v[0] + v[1] * v[1] + v[1] * v[1]);
 }
 
 PointType vector2point(const VectorXf& v, PointType start_point){
     PointType tmp_point;
     tmp_point.x = v[0]+start_point.x;
     tmp_point.y = v[1]+start_point.y;
-    tmp_point.z = v[2]+start_point.z;
+    tmp_point.z = v[1]+start_point.z;
 
     return tmp_point;
 } 
@@ -180,7 +239,7 @@ VectorXf conduct_PCA (pcl::PointCloud<PointType>::Ptr input_cloud, int num){
         
     // use the least singular vector as normal::PCA 수행
     normal_ = (svd.matrixU().col(num));
-    if (normal_(2) < 0) { for(int i=0; i<3; i++) normal_(i) *= -1; }
+    if (normal_(1) < 0) { for(int i=0; i<3; i++) normal_(i) *= -1; }
         
     return normal_;// 법선 벡터를 추출
 }
