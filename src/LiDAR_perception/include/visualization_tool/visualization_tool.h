@@ -21,6 +21,8 @@
 
 #include "RCA/Ray_Casting_Algorithm.h"
 
+#include <nav_msgs/Path.h>
+
 using namespace std;
 
 class Visualization_tool
@@ -33,6 +35,27 @@ public:
 
     ~Visualization_tool(){};
 
+    void publish_path(const path_info& path, ros::Publisher& pub) {
+
+        nav_msgs::Path path_msg;
+        path_msg.header.stamp = ros::Time::now();
+        path_msg.header.frame_id = "map";
+
+        for (const auto& pos : path.position) {
+            geometry_msgs::PoseStamped pose_stamped;
+            pose_stamped.header.stamp = ros::Time::now();
+            pose_stamped.header.frame_id = "map";
+            pose_stamped.pose.position.x = pos[0];
+            pose_stamped.pose.position.y = pos[1];
+            pose_stamped.pose.position.z = 0.0;
+            pose_stamped.pose.orientation.w = 1.0; // Default orientation
+
+            path_msg.poses.push_back(pose_stamped);
+        }
+
+        pub.publish(path_msg);
+    }
+    
     void visual_object_center(vector<Object_info> obj_center_point, visualization_msgs::MarkerArray& cone_center_markerarray, string frame_id){
         //visual marker
         visualization_msgs::Marker marker;

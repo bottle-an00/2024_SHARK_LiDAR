@@ -22,7 +22,7 @@ private:
     message_filters::Subscriber<geometry_msgs::PoseStamped> subLocal;
     boost::shared_ptr<Sync> sync;
     
-    ros::Publisher pubROICloud; 
+    ros::Publisher pubNDTCloud; 
     ros::Publisher pubClusteredCloud; 
     ros::Publisher pubObjCenter;
     ros::Publisher pubObjBoundary;
@@ -32,6 +32,8 @@ private:
     ros::Publisher pubEKFcenter;
     ros::Publisher pubEKFboundary;
     ros::Publisher pubParkingZone;
+    ros::Publisher pubROIZone;
+    ros::Publisher pubPath;
 
     pcl::PointCloud<PointType>::Ptr groundCloudIn;// patchwork++에 의해 들어온 ground cloud를 저장
     pcl::PointCloud<PointType>::Ptr nongroundCloudIn;// patchwork++에 의해 들어온  non ground cloud를 저장
@@ -40,7 +42,7 @@ private:
 
     pcl::PointCloud<PointType>::Ptr Clustered_Cloud;// 클러스터링된 cloud
     pcl::PointCloud<PointType>::Ptr ROICloud;// 클러스터링된 cloud중 z값이 0 이하인 점들만 남김
-    pcl::PointCloud<PointType>::Ptr RegisteredOBJCloud;// registered된 최종 object pointcloud
+    pcl::PointCloud<PointType>::Ptr ndtCloud;// registered된 최종 object pointcloud
 
     visualization_msgs::MarkerArray obj_boundary_markerarray;    
     visualization_msgs::MarkerArray obj_center_markerarray;    
@@ -48,6 +50,7 @@ private:
     visualization_msgs::MarkerArray outer_zone;    
     visualization_msgs::MarkerArray nearest_inner_zone;    
     visualization_msgs::MarkerArray parking_zone_markerarray;    
+    visualization_msgs::MarkerArray roi_zone_markerarray;    
 
     visualization_msgs::MarkerArray ekf_obj_center;    
     visualization_msgs::MarkerArray ekf_obj_boundary;    
@@ -74,6 +77,9 @@ private:
     Ray_Casting_Algorithm RCA;
 
     Polygon outer; 
+    Polygon roiPolygon;
+
+    path_info path;
 
     vector<Polygon> inners;
     vector<Polygon> near_ego_inners;
@@ -82,6 +88,8 @@ private:
     vector<Polygon> available_parkin_zone;
 
     float dx, dy, dyaw;
+
+    int current_index=0;
 public:
 
     Object_Detection():
@@ -91,10 +99,10 @@ public:
         subGroundCloud.subscribe(nh, "/ground_segmentation/ground", 1);
         subLocal.subscribe(nh, "/local_msgs_for_vision2", 10);
          
-        sync.reset(new Sync(MySyncPolicy(50), subNonGroundCloud, subGroundCloud, subLocal));
+        sync.reset(new Sync(MySyncPolicy(5), subNonGroundCloud, subGroundCloud, subLocal));
         sync->registerCallback(boost::bind(&Object_Detection::cloudHandler, this, _1, _2, _3));
 
-        pubROICloud = nh.advertise<sensor_msgs::PointCloud2> ("/ROI_cloud", 1);
+        pubNDTCloud = nh.advertise<sensor_msgs::PointCloud2> ("/points_for_ndt", 1);
         pubClusteredCloud = nh.advertise<sensor_msgs::PointCloud2> ("/Clustered_cloud", 1);
 
         pubObjCenter = nh.advertise<visualization_msgs::MarkerArray>("/cone_center_markers", 1);
@@ -104,9 +112,12 @@ public:
         pubOuter  =  nh.advertise<visualization_msgs::MarkerArray>("/outer_zone", 1);
         pubNearestInner =  nh.advertise<visualization_msgs::MarkerArray>("/nearest_Inner_zone", 1);
         pubParkingZone =  nh.advertise<visualization_msgs::MarkerArray>("/parking_zone", 1);
+        pubROIZone =  nh.advertise<visualization_msgs::MarkerArray>("/ROI_zone", 1);
 
         pubEKFcenter = nh.advertise<visualization_msgs::MarkerArray>("/EKF_obj/info", 1);
         pubEKFboundary = nh.advertise<visualization_msgs::MarkerArray>("/EKF_obj/boundary", 1);
+
+        pubPath = nh.advertise<nav_msgs::Path>("Path", 1);
 
         allocateMemory();
         resetParameters();
@@ -117,8 +128,8 @@ public:
         groundCloudIn.reset(new pcl::PointCloud<PointType>());
         nongroundCloudIn.reset(new pcl::PointCloud<PointType>());
         ROICloud.reset(new pcl::PointCloud<PointType>());
-        RegisteredOBJCloud.reset(new pcl::PointCloud<PointType>());
-
+        ndtCloud.reset(new pcl::PointCloud<PointType>());
+        
         Clustered_Cloud.reset(new pcl::PointCloud<PointType>());
         
         pred_position.resize(10000, Eigen::VectorXd::Zero(4));
@@ -133,12 +144,16 @@ public:
         normal_vectors.markers.clear();
         outer_zone.markers.clear();
         nearest_inner_zone.markers.clear();
+        roi_zone_markerarray.markers.clear();
+
         ekf_obj_center.markers.clear();
         ekf_obj_boundary.markers.clear();
-
+        
         outer = RCA.readOuterPolygon();
         inners = RCA.readInnerPolygon();
         parking_zone = RCA.readParkingPolygon();
+
+        read_path(path);
     }
 
     void resetParameters(){
@@ -149,7 +164,7 @@ public:
             ObjCandidateCloud[i].clear();
 
         ROICloud->clear();
-        RegisteredOBJCloud->clear();
+        ndtCloud->clear();
         
         id_list.clear();
         detected_objects.clear();
@@ -160,6 +175,8 @@ public:
         normal_vectors.markers.clear();
         outer_zone.markers.clear();
         nearest_inner_zone.markers.clear();
+        roi_zone_markerarray.markers.clear();
+
         ekf_obj_center.markers.clear();
         ekf_obj_boundary.markers.clear();
 
@@ -194,6 +211,10 @@ public:
 
         ego_info.yaw = localMsg->pose.orientation.z;
 
+        current_index = index_finder(path,ego_info,current_index);
+        
+        if(cal_diff(ego_info,path.position[current_index]) < 2) RCA.get_foward_ROI(path,roiPolygon,current_index,200,3.0);
+        
         
     }
 
@@ -224,10 +245,10 @@ public:
         //get ROICloud with RCA
         near_ego_inners = RCA.get_nearest_N_zone(6,inners,ego_info);
 
-        RCA.set_ROI_RCA(nongroundCloudIn, ROICloud,outer,near_ego_inners,ego_info);
+        RCA.set_ROI_RCA(nongroundCloudIn, ROICloud, ndtCloud, outer,near_ego_inners,ego_info);
         //
 
-        RCA.getOutliar(nongroundCloudIn,RegisteredOBJCloud,outer,inners,ego_info );
+        RCA.getOutliar(nongroundCloudIn,ndtCloud,outer,inners,ego_info );
         
         //parking_area_detection
         if(ROICloud->points.size()>0){
@@ -400,11 +421,11 @@ public:
         // 2. Publish clouds
         sensor_msgs::PointCloud2 laserCloudTemp;
 
-        if (pubROICloud.getNumSubscribers() != 0){
-            pcl::toROSMsg(*RegisteredOBJCloud, laserCloudTemp);
+        if (pubNDTCloud.getNumSubscribers() != 0){
+            pcl::toROSMsg(*ndtCloud, laserCloudTemp);
             laserCloudTemp.header.stamp = cloudHeader.stamp;
             laserCloudTemp.header.frame_id ="base_link";
-            pubROICloud.publish(laserCloudTemp);
+            pubNDTCloud.publish(laserCloudTemp);
         }
 
         if(pubClusteredCloud.getNumSubscribers() != 0){
@@ -436,7 +457,12 @@ public:
             Vt.parking_available_area_visualization(parking_zone_markerarray,available_parkin_zone);
             pubParkingZone.publish(parking_zone_markerarray);
         }
-        
+        if(pubROIZone.getNumSubscribers() != 0){
+            int id=0;
+            Vt.getPolygonInfo(id,roi_zone_markerarray,roiPolygon);
+            pubROIZone.publish(roi_zone_markerarray);
+        }
+        if(pubPath.getNumSubscribers() != 0) Vt.publish_path(path,pubPath);
     }
     
 };

@@ -24,4 +24,7 @@ extern bool ego_location_y =0.0;
 /*Lidar perception 관련*/
 extern bool OD_working =false;
 extern double OD_process_time = 0.0;
+
+
+
 #endif

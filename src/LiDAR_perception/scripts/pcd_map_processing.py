@@ -59,14 +59,16 @@ def main():
     directory = home_dir + "/2024_SHARK_LiDAR/src/LiDAR_perception/maps/"
 
     pcd_files = [f for f in os.listdir(directory) if f.endswith('.pcd')]
-    
+    print(pcd_files)
     merged_pcd = o3d.geometry.PointCloud()
 
     for file in pcd_files:
         filepath = os.path.join(directory, file)
 
         new_pcd_map = change_coordinate(filepath)
-        merged_pcd += new_pcd_map
+        if file == 'NongroundMap.pcd' or file == 'Ground.pcd':
+            print(file)
+            merged_pcd += new_pcd_map
         if file == "NongroundMap.pcd":
             new_pcd_map = roi_z(new_pcd_map,-1.7)
         new_pcd_map, _ = remove_statistical_outliers(new_pcd_map) 

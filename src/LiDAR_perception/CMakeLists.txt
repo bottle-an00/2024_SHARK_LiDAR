@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_conversions
   geometry_msgs
   morai_msgs
+  nav_msgs
 )
 
 catkin_package(

@@ -1,13 +1,16 @@
 <launch>
 
   <arg name="multi" default='false' />
+  <arg name="local_test" default='false' />
 
   <!-- main -->
   <include file="$(find LiDAR_perception)/launch/Lidar_calibration.launch" if="$(eval arg('multi') != false)"/>
   
   <include file="$(find LiDAR_perception)/launch/ioniq5.launch" />
 
-  <include file="$(find LiDAR_perception)/launch/run.launch" />
+  <include file="$(find LiDAR_perception)/launch/run.launch">
+    <arg name="local_test" value="$(arg local_test)" />
+  </include>
     
   <include file="$(find patchworkpp)/launch/demo.launch" />
 
