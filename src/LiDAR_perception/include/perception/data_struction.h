@@ -168,7 +168,7 @@ int index_finder(path_info path_info, Ego_status ego_info, int& cur_idx){
     return index;
 }
 
-pcl::PointCloud<PointType>::Ptr transformPointCloud(pcl::PointCloud<PointType>::Ptr cloudIn, Ego_status& ego_info ){
+pcl::PointCloud<PointType>::Ptr transformPointCloud(pcl::PointCloud<PointType>::Ptr cloudIn, Ego_status& ego_info){
 
     pcl::PointCloud<PointType>::Ptr cloudOut(new pcl::PointCloud<PointType>());
 
@@ -181,6 +181,9 @@ pcl::PointCloud<PointType>::Ptr transformPointCloud(pcl::PointCloud<PointType>::
     for (int i = 0; i < cloudSize; ++i){
 
         pointFrom = &cloudIn->points[i];
+        
+        pointFrom->x += LiDAR_to_GPS;
+        
         float x1 = cos(ego_info.yaw) * pointFrom->x - sin(ego_info.yaw) * pointFrom->y;
         float y1 = sin(ego_info.yaw) * pointFrom->x + cos(ego_info.yaw)* pointFrom->y;
         float z1 = pointFrom->z;

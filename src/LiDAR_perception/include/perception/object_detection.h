@@ -189,11 +189,7 @@ public:
     void groundcloudHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg){
         
         pcl::fromROSMsg(*laserCloudMsg, *groundCloudIn);
-        pcl::PointCloud<PointType>::Ptr tmp_ground(new pcl::PointCloud<PointType>);
-        RCA.getOutliar(groundCloudIn,tmp_ground,outer,near_ego_inners,ego_info );
         
-        //*RegisteredOBJCloud += *tmp_ground;
-
         *groundCloudIn  = *transformPointCloud(groundCloudIn,ego_info);
     
         Ground_kdtree.setInputCloud(groundCloudIn);
@@ -213,7 +209,8 @@ public:
 
         current_index = index_finder(path,ego_info,current_index);
         
-        if(cal_diff(ego_info,path.position[current_index]) < 2) RCA.get_foward_ROI(path,roiPolygon,current_index,200,3.0);
+        if(cal_diff(ego_info,path.position[current_index]) < 2) RCA.get_foward_ROI(path,roiPolygon,current_index,200,6.0);
+        else roiPolygon.vertices.clear();
         
         
     }
@@ -424,7 +421,7 @@ public:
         if (pubNDTCloud.getNumSubscribers() != 0){
             pcl::toROSMsg(*ndtCloud, laserCloudTemp);
             laserCloudTemp.header.stamp = cloudHeader.stamp;
-            laserCloudTemp.header.frame_id ="base_link";
+            laserCloudTemp.header.frame_id ="velodyne";
             pubNDTCloud.publish(laserCloudTemp);
         }
 

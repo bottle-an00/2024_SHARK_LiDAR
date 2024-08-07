@@ -7,6 +7,7 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include "morai_msgs/GPSMessage.h"
 #include "EKF/FusionEKF.h"
+#include <sensor_msgs/PointCloud2.h>
 
 #include <ros/ros.h>
 #include <message_filters/subscriber.h>
@@ -67,9 +68,9 @@ public:
         nh("~"){
 
         sub_imu.subscribe(nh, "/imu", 100);
-        sub_gps.subscribe(nh, "/gps_test", 100);
+        sub_gps.subscribe(nh, "/gps", 40);
 
-        sync.reset(new local_sync(Local_Policy(2), sub_imu, sub_gps));
+        sync.reset(new local_sync(Local_Policy(40), sub_imu, sub_gps));
         sync->registerCallback(boost::bind(&Local::gpscallback, this, _1, _2));
 
         pub_local =  nh.advertise<geometry_msgs::PoseStamped>("/local_msgs_for_vision2", 1000);
@@ -94,9 +95,7 @@ public:
 
     void gpscallback(const boost::shared_ptr<const sensor_msgs::Imu>& Imu_msg,
                      const boost::shared_ptr<const morai_msgs::GPSMessage>& Gps_msg){
-                        
-        ROS_INFO_STREAM("\033[1;32m" << "Local Working..."<< "\033[0m");
-        
+                                
         imucallback(Imu_msg);
         
         double lat_, lon_, alt_;
@@ -106,7 +105,8 @@ public:
         alt_ = Gps_msg->altitude;
 
         if(lat_ != 0 && lon_ != 0){
-
+            ROS_INFO_STREAM("\033[1;32m" << "Local Working..."<< "\033[0m");
+            
             GC.initialiseReference(37.4193122129, 127.125659528, 1.56630456448);
             GC.geodetic2Enu(lat_,lon_,alt_,&e_,&n_,&u_);
 
@@ -131,6 +131,7 @@ public:
             ego_location_y = n_;
             
         }else{
+            ROS_INFO_STREAM("\033[1;32m" << "NDT Local Working..."<< "\033[0m");
 
             if(Non_GPS_Flag == true){
                 data2.header.stamp = ros::Time::now();
@@ -195,6 +196,7 @@ public:
     }
     
     void publish_EKF_local(const sensor_msgs::Imu::ConstPtr& Imu_msg){
+
         measurement_pack.timestamp_ = static_cast<long long>(Imu_msg->header.stamp.toNSec());
         
         EKF.ProcessMeasurement(measurement_pack);
