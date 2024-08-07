@@ -175,7 +175,7 @@ public:
 
                 int obj_id;
 
-                if(distances[0] < 2){
+                if(distances[0] < 5){
                     int id_  = static_cast<int>(detected_object_cloud->points[indices[0]].intensity);
 
                     // if(cal_iou(object,Object_DB, id_) > 0) {

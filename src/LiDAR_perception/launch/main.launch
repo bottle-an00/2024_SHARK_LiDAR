@@ -1,5 +1,21 @@
 <launch>
 
+  <param name="/ndt_working" value="false" type="bool"/>
+  <param name="/ndt_process_time" value="0.0" type="double"/>
+  
+  <param name="/patchworkpp_working" value="false" type="bool"/>
+  <param name="/patchworkpp_process_time" value="0.0" type="double"/>
+  
+  <param name="/multi_LiDAR_Calibration_working" value="false" type="bool"/>
+  
+  <param name="/local_working" value="false" type="bool"/>
+  <param name="/ego_location_x" value="0.0" type="double"/>
+  <param name="/ego_location_y" value="0.0" type="double"/>
+  <param name="/currnet_index" value="0" type="int"/>
+
+  <param name="/OD_working" value="false" type="bool"/>
+  <param name="/OD_process_time" value="0.0" type="double"/>
+
   <arg name="multi" default='false' />
   <arg name="local_test" default='false' />
 

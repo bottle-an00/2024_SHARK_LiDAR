@@ -6,8 +6,6 @@
 #include "RCA/Ray_Casting_Algorithm.h"
 #include "tracking_tools/tracking_tools.h"
 
-#include "perception/process_info.h"
-
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
@@ -52,7 +50,7 @@ private:
     visualization_msgs::MarkerArray parking_zone_markerarray;    
     visualization_msgs::MarkerArray roi_zone_markerarray;    
 
-    visualization_msgs::MarkerArray ekf_obj_center;    
+    visualization_msgs::MarkerArray ekf_info_markerarray;    
     visualization_msgs::MarkerArray ekf_obj_boundary;    
 
     vector<Object_info> detected_objects;
@@ -146,7 +144,7 @@ public:
         nearest_inner_zone.markers.clear();
         roi_zone_markerarray.markers.clear();
 
-        ekf_obj_center.markers.clear();
+        ekf_info_markerarray.markers.clear();
         ekf_obj_boundary.markers.clear();
         
         outer = RCA.readOuterPolygon();
@@ -177,7 +175,7 @@ public:
         nearest_inner_zone.markers.clear();
         roi_zone_markerarray.markers.clear();
 
-        ekf_obj_center.markers.clear();
+        ekf_info_markerarray.markers.clear();
         ekf_obj_boundary.markers.clear();
 
         near_ego_inners.clear();
@@ -189,9 +187,17 @@ public:
     void groundcloudHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg){
         
         pcl::fromROSMsg(*laserCloudMsg, *groundCloudIn);
+
+        size_t cloud_size = groundCloudIn->points.size();
         
+        for(int i = 0; i < cloud_size; i++){
+            PointType thisPoint = groundCloudIn->points[i];
+            thisPoint.x += LiDAR_to_GPS;
+            ndtCloud->push_back(thisPoint);
+        }   
+
         *groundCloudIn  = *transformPointCloud(groundCloudIn,ego_info);
-    
+
         Ground_kdtree.setInputCloud(groundCloudIn);
     }
 
@@ -209,7 +215,7 @@ public:
 
         current_index = index_finder(path,ego_info,current_index);
         
-        if(cal_diff(ego_info,path.position[current_index]) < 2) RCA.get_foward_ROI(path,roiPolygon,current_index,200,6.0);
+        if(cal_diff(ego_info,path.position[current_index]) < 4) RCA.get_foward_ROI(path,roiPolygon,current_index,200,6.0);
         else roiPolygon.vertices.clear();
         
         
@@ -245,8 +251,6 @@ public:
         RCA.set_ROI_RCA(nongroundCloudIn, ROICloud, ndtCloud, outer,near_ego_inners,ego_info);
         //
 
-        RCA.getOutliar(nongroundCloudIn,ndtCloud,outer,inners,ego_info );
-        
         //parking_area_detection
         if(ROICloud->points.size()>0){
             available_parkin_zone = RCA.get_available_parking_area(parking_zone, ROICloud, ego_info);
@@ -268,8 +272,6 @@ public:
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
         
-        OD_working =true;
-        OD_process_time = duration.count();
         // ROS_INFO_STREAM("\033[1;32m" << "OD Working... process time:: "<<duration.count() << " ms" <<  "\033[0m");
 
         publishCloud();
@@ -299,15 +301,9 @@ public:
         getIdList();
         
         if(pubEKFcenter.getNumSubscribers() != 0){
-            Vt.visual_kalman_info_kf(id_list,pred_position,object_DB,ekf_obj_center);
-            pubEKFcenter.publish(ekf_obj_center);
+            Vt.visual_kalman_info_kf(id_list,pred_position,object_DB,ekf_info_markerarray,roiPolygon);
+            pubEKFcenter.publish(ekf_info_markerarray);
         }
-
-        if(pubEKFboundary.getNumSubscribers() != 0){
-            Vt.visual_EKF_OBJ_boundary(id_list,object_DB,ekf_obj_boundary);
-            pubEKFboundary.publish(ekf_obj_boundary);
-        }
-        
 
     }
 

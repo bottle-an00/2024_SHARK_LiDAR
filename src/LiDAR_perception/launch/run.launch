@@ -1,6 +1,10 @@
 <launch>
     <!--- Sim Time -->
     <arg name="local_test" default='false' />
+    <arg name="/gps_topic" default='/gps' />
+
+    <param if="$(eval arg('local_test') == 'false')" name="/gps_topic" value="$(arg gps_topic)" />
+    <param if="$(eval arg('local_test') != 'false')"  name="/gps_topic" value="/gps_test" />
 
     <param name="/use_sim_time" value="true" />
     

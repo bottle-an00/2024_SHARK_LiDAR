@@ -28,7 +28,7 @@ using namespace std;
 class Visualization_tool
 {
 private:
-    /* data */
+    Ray_Casting_Algorithm RCA;
 public:
 
     Visualization_tool(){};
@@ -224,26 +224,26 @@ public:
         }
     }
     
-    void visual_kalman_info_kf(vector<int>& id_list, vector<VectorXd>& pred_position, vector<Object_info>& Object_BD, visualization_msgs::MarkerArray& markerarray){
+    void visual_kalman_info_kf(vector<int>& id_list, vector<VectorXd>& pred_position, vector<Object_info>& Object_BD, visualization_msgs::MarkerArray& markerarray,Polygon& roiPolygon){
         //visual marker
         
         for(const auto& id : id_list){            
             if(pred_position[id].size()>0){
-                visualization_msgs::Marker marker_arrow;
+                visualization_msgs::Marker marker_boundary;
                 visualization_msgs::Marker marker;
                 visualization_msgs::Marker marker_num;
 
                 // marker.header.frame_id = cloudHeader.frame_id;
                 marker.header.frame_id = "map";
                 marker.header.stamp = ros::Time().now();
-                marker.ns ="cone's center point";
+                marker.ns ="obj's center point";
                 marker.id = 10*id;
-                float Nsec =0.5;
+                float Nsec =1.0;
 
                 marker.type = visualization_msgs::Marker::CUBE; 
                 marker.action = visualization_msgs::Marker::ADD;
-                marker.pose.position.x = pred_position[id][0];//+Nsec*pred_position[id][2];
-                marker.pose.position.y = pred_position[id][1];//+Nsec*pred_position[id][3];
+                marker.pose.position.x = pred_position[id][0];
+                marker.pose.position.y = pred_position[id][1];
                 marker.pose.position.z = 0.0;
                 marker.pose.orientation.x = 0.0;
                 marker.pose.orientation.y = 0.0;
@@ -258,19 +258,19 @@ public:
                 marker.color.b = 1.0;
                 marker.color.a = 1;
                 marker.lifetime = ros::Duration(0.11);
-                markerarray.markers.push_back(marker);
 
-                // marker.id = 10*id + 1;
-                // marker.pose.position.x = pred_position[id][0]+2*Nsec*pred_position[id][2];
-                // marker.pose.position.y = pred_position[id][1]+2*Nsec*pred_position[id][3];
-                // markerarray.markers.push_back(marker);
+                marker.id = 10*id + 1;
+                marker.scale.x = 0.2;
+                marker.scale.y = 0.2;
+                marker.scale.z = 0.2;
 
-                // marker.id = 10*id + 2;
-                // marker.pose.position.x = pred_position[id][0]+3*Nsec*pred_position[id][2];
-                // marker.pose.position.y = pred_position[id][1]+3*Nsec*pred_position[id][3];
-                // markerarray.markers.push_back(marker);
+                marker.color.r = 0.0;
+                marker.color.g = 0.0;
+                marker.color.b = 1.0;
 
-                // marker_num.header.frame_id = cloudHeader.frame_id;
+                marker.pose.position.x = pred_position[id][0]+Nsec*pred_position[id][2];
+                marker.pose.position.y = pred_position[id][1]+Nsec*pred_position[id][3];
+
                 marker_num.header.frame_id = "map";
                 marker_num.header.stamp = ros::Time().now();
                 marker_num.id = 20000 + id;
@@ -287,51 +287,50 @@ public:
                 marker_num.scale.z = 1;
                 marker_num.lifetime = ros::Duration(0.11);
 
-                markerarray.markers.push_back(marker_num);
+                marker_boundary.header.frame_id = "map";
+                marker_boundary.header.stamp = ros::Time().now();
+                marker_boundary.id = 10*id + 2;
+            
+                marker_boundary.type = visualization_msgs::Marker::LINE_LIST; // 선 리스트 유형
+                marker_boundary.action = visualization_msgs::Marker::ADD;
+                marker_boundary.scale.x = 0.1; // 선의 두께
 
-                // // marker_arrow.header.frame_id = cloudHeader.frame_id;
-                // marker_arrow.header.frame_id = "map";
-                // marker_arrow.header.stamp = ros::Time().now();
-                // marker_arrow.id = 40000 + 10*id;
-                // marker_arrow.type = visualization_msgs::Marker::LINE_LIST;
-                // marker_arrow.action = visualization_msgs::Marker::ADD;
-                // geometry_msgs::Point start_p, end_p;
-                // start_p.x = pred_position[id][0];
-                // start_p.y = pred_position[id][1];
-                // marker_arrow.points.push_back(start_p);
-                 
-                // end_p.x = pred_position[id][0]+Nsec*pred_position[id][2];
-                // end_p.y = pred_position[id][1]+Nsec*pred_position[id][3];
-                // marker_arrow.points.push_back(end_p);
-                // marker_arrow.pose.orientation.w = 1.0;
+                geometry_msgs::Point minPoint;
+                minPoint.x = Object_BD[id].min_point.x;
+                minPoint.y = Object_BD[id].min_point.y;
 
-                // marker_arrow.color.r = 1;
-                // marker_arrow.color.g = 1;
-                // marker_arrow.color.b = 0;
-                // marker_arrow.color.a = 1;
-                // marker_arrow.scale.x = 0.1; // 선의 두께
+                geometry_msgs::Point maxPoint;
+                maxPoint.x = Object_BD[id].max_point.x;
+                maxPoint.y = Object_BD[id].max_point.y;
 
-                // marker_arrow.lifetime = ros::Duration(0.11);
-                // markerarray.markers.push_back(marker_arrow);
-                
-                // marker_arrow.id = 40000 + 10*id+1;
-                // start_p.x = pred_position[id][0]+Nsec*pred_position[id][2];
-                // start_p.y = pred_position[id][1]+Nsec*pred_position[id][3];
-                // marker_arrow.points.push_back(start_p);
+                // 바운딩 박스를 구성하는 선들을 추가
+                marker_boundary.points.push_back(make_Geo_Point(minPoint.x, minPoint.y,0.0));
+                marker_boundary.points.push_back(make_Geo_Point(minPoint.x, maxPoint.y,0.0));
 
-                // end_p.x = pred_position[id][0]+2*Nsec*pred_position[id][2];
-                // end_p.y = pred_position[id][1]+2*Nsec*pred_position[id][3];
-                // marker_arrow.points.push_back(end_p);
-                // markerarray.markers.push_back(marker_num);
+                marker_boundary.points.push_back(make_Geo_Point(minPoint.x, minPoint.y,0.0));
+                marker_boundary.points.push_back(make_Geo_Point(maxPoint.x, minPoint.y,0.0));
 
-                // marker_arrow.id = 40000 + 10*id+2;
-                // start_p.x = pred_position[id][0]+2*Nsec*pred_position[id][2];
-                // start_p.y = pred_position[id][1]+2*Nsec*pred_position[id][3];
-                // marker_arrow.points.push_back(start_p);
+                marker_boundary.points.push_back(make_Geo_Point(maxPoint.x, maxPoint.y,0.0));
+                marker_boundary.points.push_back(make_Geo_Point(maxPoint.x, minPoint.y,0.0));
 
-                // end_p.x = pred_position[id][0]+3*Nsec*pred_position[id][2];
-                // end_p.y = pred_position[id][1]+3*Nsec*pred_position[id][3];
-                // marker_arrow.points.push_back(end_p);
+                marker_boundary.points.push_back(make_Geo_Point(maxPoint.x, maxPoint.y,0.0));
+                marker_boundary.points.push_back(make_Geo_Point(minPoint.x, maxPoint.y,0.0));
+
+                marker_boundary.color.r = 1.0;
+                marker_boundary.color.g = 1.0;
+                marker_boundary.color.b = 0.0;
+                marker_boundary.color.a = 1;
+                marker_boundary.lifetime = ros::Duration(0.11);
+
+                Point p = { pred_position[id][0], pred_position[id][1] };
+                Point est_p = { pred_position[id][0]+Nsec*pred_position[id][2], pred_position[id][1]+Nsec*pred_position[id][3] };
+
+                if(RCA.isInsidePolygon(roiPolygon.vertices,p) || RCA.isInsidePolygon(roiPolygon.vertices,est_p)){
+                    markerarray.markers.push_back(marker);
+                    markerarray.markers.push_back(marker_num);
+                    markerarray.markers.push_back(marker_boundary);
+                }
+
             }
         }
     }
@@ -375,7 +374,7 @@ public:
             marker.color.b = 0.0;
             marker.color.a = 1;
             marker.lifetime = ros::Duration(0.11);
-
+            
             obj_boundary_markerarray.markers.push_back(marker);
 
         }

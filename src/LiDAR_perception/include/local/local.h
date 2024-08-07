@@ -18,8 +18,6 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_datatypes.h>
 
-#include "perception/process_info.h"
-
 typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Imu, morai_msgs::GPSMessage> Local_Policy;
 typedef message_filters::Synchronizer<Local_Policy> local_sync;
 #define PI 3.14159265
@@ -62,13 +60,16 @@ private:
     VectorXd pred_local;
     MeasurementPackage measurement_pack;
 
+    string gps_topic;
+
 public:
 
     Local():
         nh("~"){
+        nh.getParam("/gps_topic", gps_topic);
 
         sub_imu.subscribe(nh, "/imu", 100);
-        sub_gps.subscribe(nh, "/gps", 40);
+        sub_gps.subscribe(nh, gps_topic, 40);
 
         sync.reset(new local_sync(Local_Policy(40), sub_imu, sub_gps));
         sync->registerCallback(boost::bind(&Local::gpscallback, this, _1, _2));
@@ -126,9 +127,6 @@ public:
             Non_GPS_Flag = true;
 
             publishTF(Gps_msg->header.stamp, e_, n_);
-            local_working = true;
-            ego_location_x = e_;
-            ego_location_y = n_;
             
         }else{
             ROS_INFO_STREAM("\033[1;32m" << "NDT Local Working..."<< "\033[0m");
@@ -150,9 +148,9 @@ public:
 
             publish_EKF_local(Imu_msg);
             
-            local_working = true;
-            ego_location_x = ndt_msgs.pose.position.x;
-            ego_location_y = ndt_msgs.pose.position.y;
+            // local_working = true;
+            // ego_location_x = ndt_msgs.pose.position.x;
+            // ego_location_y = ndt_msgs.pose.position.y;
 
             publishTF(Gps_msg->header.stamp, ndt_msgs.pose.position.x, ndt_msgs.pose.position.y);
 

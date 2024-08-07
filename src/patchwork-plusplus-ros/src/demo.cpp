@@ -47,7 +47,8 @@ void callbackCloud(const sensor_msgs::PointCloud2::Ptr &cloud_msg)
 
     // ROS_INFO_STREAM("\033[1;32m" << "Input PointCloud: " << pc_curr.size() << " -> Ground: " << pc_ground.size() <<  "/ NonGround: " << pc_non_ground.size()
     //      << " (running_time: " << time_taken << " sec)" << "\033[0m");
-
+    ros::NodeHandle tmp_nh;
+    tmp_nh.setParam("/patchworkpp_process_time", time_taken);
     pub_cloud.publish(cloud2msg(pc_curr, cloud_msg->header.stamp, cloud_msg->header.frame_id));
     pub_ground.publish(cloud2msg(pc_ground, cloud_msg->header.stamp, cloud_msg->header.frame_id));
     pub_non_ground.publish(cloud2msg(pc_non_ground, cloud_msg->header.stamp, cloud_msg->header.frame_id));
