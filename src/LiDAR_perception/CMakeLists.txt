@@ -22,6 +22,10 @@ catkin_package(
   CATKIN_DEPENDS roscpp rospy std_msgs
 )
 
+find_package(OpenCV REQUIRED)
+
+include_directories(${OpenCV_INCLUDE_DIRS})
+
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
@@ -57,7 +61,9 @@ add_executable(gpslam include/gpslam/PC_processing.cpp )
 add_dependencies(gpslam ${catkin_EXPORTED_TARGETS})
 target_link_libraries(gpslam ${catkin_LIBRARIES}${PCL_LIBRARIES})
 
-
+add_executable(lpm include/perception/local_path_maker.cpp )
+add_dependencies(lpm ${catkin_EXPORTED_TARGETS} ${PCL_LIBRARIES} ${OpenCV_LIBS})
+target_link_libraries(lpm ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS})
 
 add_executable(point_clicker src/point_clicker.cpp )
 add_dependencies(point_clicker ${catkin_EXPORTED_TARGETS} ${PCL_LIBRARIES} ${OpenCV_LIBS})

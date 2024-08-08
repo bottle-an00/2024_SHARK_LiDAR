@@ -7,7 +7,7 @@
 
 
 // #include "points_downsampler.h"
-#define MAX_MEASUREMENT_RANGE 60.0
+#define MAX_MEASUREMENT_RANGE 120.0
 
 ros::Publisher filtered_points_pub;
 
@@ -50,7 +50,7 @@ static void scan_callback(const sensor_msgs::PointCloud2::ConstPtr& input)
 {
   pcl::PointCloud<pcl::PointXYZ> scan;
   pcl::fromROSMsg(*input, scan);
-  scan = removePointsByRange(scan, 0, MAX_MEASUREMENT_RANGE);
+  scan = removePointsByRange(scan, 20, MAX_MEASUREMENT_RANGE);
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr scan_ptr(new pcl::PointCloud<pcl::PointXYZ>(scan));
   pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_scan_ptr(new pcl::PointCloud<pcl::PointXYZ>());
