@@ -97,7 +97,7 @@ public:
         subGroundCloud.subscribe(nh, "/ground_segmentation/ground", 1);
         subLocal.subscribe(nh, "/local_msgs_for_vision2", 10);
          
-        sync.reset(new Sync(MySyncPolicy(5), subNonGroundCloud, subGroundCloud, subLocal));
+        sync.reset(new Sync(MySyncPolicy(20), subNonGroundCloud, subGroundCloud, subLocal));
         sync->registerCallback(boost::bind(&Object_Detection::cloudHandler, this, _1, _2, _3));
 
         pubNDTCloud = nh.advertise<sensor_msgs::PointCloud2> ("/points_for_ndt", 1);
@@ -180,6 +180,7 @@ public:
 
         near_ego_inners.clear();
 
+        
     }
 
     ~Object_Detection(){}
@@ -214,11 +215,14 @@ public:
         ego_info.yaw = localMsg->pose.orientation.z;
 
         current_index = index_finder(path,ego_info,current_index);
-        
+
         if(cal_diff(ego_info,path.position[current_index]) < 4) RCA.get_foward_ROI(path,roiPolygon,current_index,200,6.0);
         else roiPolygon.vertices.clear();
         
-        
+        ros::NodeHandle tmp_nh;
+        tmp_nh.setParam("/OD_working",true);
+        tmp_nh.setParam("/currnet_index",current_index);
+
     }
 
     void copyPointCloud(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg){
@@ -273,6 +277,8 @@ public:
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
         
         // ROS_INFO_STREAM("\033[1;32m" << "OD Working... process time:: "<<duration.count() << " ms" <<  "\033[0m");
+        ros::NodeHandle tmp_nh;
+        tmp_nh.setParam("/OD_process_time",static_cast<double>(duration.count()));
 
         publishCloud();
 

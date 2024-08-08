@@ -7,7 +7,7 @@
 
 
 // #include "points_downsampler.h"
-#define MAX_MEASUREMENT_RANGE 120.0
+#define MAX_MEASUREMENT_RANGE 60.0
 
 ros::Publisher filtered_points_pub;
 

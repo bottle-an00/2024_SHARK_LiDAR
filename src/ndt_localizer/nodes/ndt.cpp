@@ -1,5 +1,8 @@
 #include "ndt.h"
 
+#include <ctime>
+#include <chrono>
+
 NdtLocalizer::NdtLocalizer(ros::NodeHandle &nh, ros::NodeHandle &private_nh):nh_(nh), private_nh_(private_nh), tf2_listener_(tf2_buffer_){
 
   key_value_stdmap_["state"] = "Initializing";
@@ -129,7 +132,13 @@ void NdtLocalizer::callback_pointsmap(
 void NdtLocalizer::callback_pointcloud(
   const sensor_msgs::PointCloud2::ConstPtr & sensor_points_sensorTF_msg_ptr)
 {
-  if(!get_init_pose) return;
+  if(!get_init_pose) {
+    ros::NodeHandle tmp_nh;
+    tmp_nh.setParam("/ndt_working", false);
+    tmp_nh.setParam("/ndt_process_time", 0.0);
+    return;
+  }
+
   const auto exe_start_time = std::chrono::system_clock::now();
   // mutex Map
   std::lock_guard<std::mutex> lock(ndt_map_mtx_);
@@ -210,13 +219,13 @@ void NdtLocalizer::callback_pointcloud(
   delta_trans = pre_trans.inverse() * result_pose_matrix;
 
   Eigen::Vector3f delta_translation = delta_trans.block<3, 1>(0, 3);
-  std::cout<<"delta x: "<<delta_translation(0) << " y: "<<delta_translation(1)<<
-             " z: "<<delta_translation(2)<<std::endl;
+  //std::cout<<"delta x: "<<delta_translation(0) << " y: "<<delta_translation(1)<<
+  //           " z: "<<delta_translation(2)<<std::endl;
 
   Eigen::Matrix3f delta_rotation_matrix = delta_trans.block<3, 3>(0, 0);
   Eigen::Vector3f delta_euler = delta_rotation_matrix.eulerAngles(2,1,0);
-  std::cout<<"delta yaw: "<<delta_euler(0) << " pitch: "<<delta_euler(1)<<
-             " roll: "<<delta_euler(2)<<std::endl;
+  //std::cout<<"delta yaw: "<<delta_euler(0) << " pitch: "<<delta_euler(1)<<
+  //           " roll: "<<delta_euler(2)<<std::endl;
 
   pre_trans = result_pose_matrix;
   
@@ -260,13 +269,17 @@ void NdtLocalizer::callback_pointcloud(
   key_value_stdmap_["transform_probability"] = std::to_string(transform_probability);
   key_value_stdmap_["iteration_num"] = std::to_string(iteration_num);
   key_value_stdmap_["skipping_publish_num"] = std::to_string(skipping_publish_num);
+  
+  ros::NodeHandle tmp_nh;
+  tmp_nh.setParam("/ndt_working", true);
+  tmp_nh.setParam("/ndt_process_time", exe_time);
 
-  std::cout << "------------------------------------------------" << std::endl;
-  std::cout << "align_time: " << align_time << "ms" << std::endl;
-  std::cout << "exe_time: " << exe_time << "ms" << std::endl;
-  std::cout << "trans_prob: " << transform_probability << std::endl;
-  std::cout << "iter_num: " << iteration_num << std::endl;
-  std::cout << "skipping_publish_num: " << skipping_publish_num << std::endl;
+  // std::cout << "------------------------------------------------" << std::endl;
+  // std::cout << "align_time: " << align_time << "ms" << std::endl;
+  // std::cout << "exe_time: " << exe_time << "ms" << std::endl;
+  // std::cout << "trans_prob: " << transform_probability << std::endl;
+  // std::cout << "iter_num: " << iteration_num << std::endl;
+  // std::cout << "skipping_publish_num: " << skipping_publish_num << std::endl;
 }
 
 void NdtLocalizer::init_params(){

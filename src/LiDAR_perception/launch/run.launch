@@ -1,10 +1,11 @@
 <launch>
     <!--- Sim Time -->
-    <arg name="local_test" default='false' />
-    <arg name="/gps_topic" default='/gps' />
+    <arg name="local_test" default= 'false'/>
+    <arg name="check_process" default= 'true'/>
+    <arg name="gps_topic" default="/gps" />
 
-    <param if="$(eval arg('local_test') == 'false')" name="/gps_topic" value="$(arg gps_topic)" />
-    <param if="$(eval arg('local_test') != 'false')"  name="/gps_topic" value="/gps_test" />
+    <param if="$(eval arg('local_test') == false)" name="/gps_topic" value="$(arg gps_topic)" />
+    <param if="$(eval arg('local_test') != false)"  name="/gps_topic" value="/gps_test" />
 
     <param name="/use_sim_time" value="true" />
     
@@ -15,6 +16,8 @@
     <node pkg="LiDAR_perception" type="local"   name="local"  output="screen" if="$(eval arg('local_test') == false)"/>
 
     <node pkg="LiDAR_perception" type="local_test"   name="local_test"  output="screen" if="$(eval arg('local_test') != false)"/>
+
+    <node pkg="LiDAR_perception" type="status_manager"   name="status_manager"  output="screen" if="$(eval arg('check_process') == true)"/>
 
     <node pkg="LiDAR_perception" type="main"   name="main"  output="screen"/>
         

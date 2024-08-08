@@ -58,24 +58,36 @@ public:
 
     void print_status(){
 
-        ROS_INFO_STREAM("\033[1;32m"<< endl 
-        << "NDT_Localization :: " << (ndt_working ? "ON" : "OFF") <<endl
-        << "NDT Process Time :: " << ndt_process_time << endl<<endl
+        ROS_INFO_STREAM("\033[1;37m"<< endl 
+        <<"///////////////////////////////////////////////////" << endl << endl << endl
         
-        << "Patchworkpp :: " << (patchworkpp_working ? "ON" : "OFF") << endl
-        << "Patworkpp Process Time :: " << patchworkpp_process_time << endl 
+        << "NDT_Localization :: " << "\033[1;3;33m" <<  (ndt_working ? "ON" : "OFF") << "\033[0;1;37m" <<endl
+        << "NDT Process Time :: " << "\033[1;3;33m" << ndt_process_time <<" ms" << "\033[0;1;37m" << endl<<endl
         
-        << "Multi LiDAR Process :: " << (multi_LiDAR_Calibration_working ? "ON" : "OFF") << endl<<endl
+        << "Patchworkpp :: " << "\033[1;3;33m"<< (patchworkpp_working ? "ON" : "OFF") << "\033[0;1;37m"<< endl
+        << "Patchworkpp Process Time :: " << "\033[1;3;33m"<< patchworkpp_process_time <<" ms" << "\033[0;1;37m"<< endl <<endl
         
-        << "Local Process :: " << (local_working ? "ON":"OFF") << endl
-        << "Ego Position :: { " << ego_location_x << " , " << ego_location_y << " } " << endl
-        << "Ego Current :: " << currnet_index << endl<<endl
+        << "Multi LiDAR Process :: " << "\033[1;3;33m"<< (multi_LiDAR_Calibration_working ? "ON" : "OFF") << "\033[0;1;37m"<< endl <<endl
+        
+        << "Local Process :: " << "\033[1;3;33m" << (local_working ? "ON":"OFF") << "\033[0;1;37m"<< endl
+        << "Ego Position :: "  << "\033[1;3;33m" << "{ " << ego_location_x << " , " << ego_location_y << " } " << "\033[0;1;37m"<< endl
+        << "Ego Current :: "   << "\033[1;3;33m" << currnet_index << "\033[0;1;37m"<< endl<<endl
 
-        << "Object Detection working :: " << (OD_working ? "ON" : "OFF" )<<endl
-        << "Object Process Time :: " << OD_process_time << endl 
+        << "Object Detection working :: " << "\033[1;3;33m"<< (OD_working ? "ON" : "OFF" )<< "\033[0;1;37m"<<endl
+        << "Object Process Time :: " << "\033[1;3;33m"<< OD_process_time << " ms" << endl << "\033[0;1;37m"<<endl << endl
+
+        <<"///////////////////////////////////////////////////" << endl << endl << endl
         << "\033[0m");
     }
 
+    void run(){
+        
+        check_status();
+
+        print_status();
+
+    }
+    
     ~status_manager(){};
 };
 
@@ -91,9 +103,7 @@ int main(int argc, char** argv){
 
     while(ros::ok()){
         
-        SM.check_status();
-
-        SM.print_status();
+        SM.run();
 
         ros::spinOnce();
         

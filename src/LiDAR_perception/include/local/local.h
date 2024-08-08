@@ -106,7 +106,6 @@ public:
         alt_ = Gps_msg->altitude;
 
         if(lat_ != 0 && lon_ != 0){
-            ROS_INFO_STREAM("\033[1;32m" << "Local Working..."<< "\033[0m");
             
             GC.initialiseReference(37.4193122129, 127.125659528, 1.56630456448);
             GC.geodetic2Enu(lat_,lon_,alt_,&e_,&n_,&u_);
@@ -126,10 +125,13 @@ public:
             pub_local.publish(data);
             Non_GPS_Flag = true;
 
+            nh.setParam("/local_working", true);
+            nh.setParam("/ego_location_x",e_);
+            nh.setParam("/ego_location_y" , n_);
+
             publishTF(Gps_msg->header.stamp, e_, n_);
             
         }else{
-            ROS_INFO_STREAM("\033[1;32m" << "NDT Local Working..."<< "\033[0m");
 
             if(Non_GPS_Flag == true){
                 data2.header.stamp = ros::Time::now();
@@ -148,9 +150,9 @@ public:
 
             publish_EKF_local(Imu_msg);
             
-            // local_working = true;
-            // ego_location_x = ndt_msgs.pose.position.x;
-            // ego_location_y = ndt_msgs.pose.position.y;
+            nh.setParam("/local_working", true);
+            nh.setParam("/ego_location_x",ndt_msgs.pose.position.x);
+            nh.setParam("/ego_location_y" , ndt_msgs.pose.position.y);
 
             publishTF(Gps_msg->header.stamp, ndt_msgs.pose.position.x, ndt_msgs.pose.position.y);
 

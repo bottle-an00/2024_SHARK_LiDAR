@@ -154,7 +154,7 @@ int index_finder(path_info path_info, Ego_status ego_info, int& cur_idx){
     int k = path_info.position.size();
     double min_dist = 100;
     int index = -1;
-    int step_size = 500;
+    int step_size = 8000;
     if(k >0){
         for(int i = std::max(cur_idx - step_size, 0); i < std::min(k, cur_idx + step_size); ++i) {
             double dist = sqrt((ego_info.curr.x - path_info.position[i][0])*(ego_info.curr.x - path_info.position[i][0])

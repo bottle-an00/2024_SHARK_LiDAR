@@ -248,7 +248,7 @@ public:
             int idx = current_index + i;
 
             if (idx >= path.position.size()) {
-                cout << "Index out of bounds: " << idx << endl;
+                //cout << "Index out of bounds: " << idx << endl;
                 break;
             }
 
