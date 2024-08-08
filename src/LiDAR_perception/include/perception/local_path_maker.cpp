@@ -24,8 +24,8 @@ private:
     std_msgs::Header cloudHeader;
     cv::Mat cost_mat;
     
-    int cost_mat_row = 200;//전방 20m (10cm단위, x와 연관)
-    int cost_mat_col = 101;//좌우 50개씩 (y와 연관)
+    int cost_mat_row = 200; // 전방 20m (10cm단위, x와 연관)
+    int cost_mat_col = 201; // 좌우 50개씩 (y와 연관)
 
     std::mutex image_mutex; 
     bool update_image = false; 
@@ -36,13 +36,11 @@ public:
         subNonGroundCloud = nh.subscribe<sensor_msgs::PointCloud2>("/ground_segmentation/nonground", 1, &local_path_maker::cloudHandler, this);
 
         pubPreprocessedCloud = nh.advertise<sensor_msgs::PointCloud2>("/preprocessed_pointcloud", 1);
-
         pubPath = nh.advertise<nav_msgs::Path>("local_path", 1);
 
         allocateMemory();
-        resetParameters();
-
         std::thread(&local_path_maker::visualizeImage, this).detach();
+        resetParameters();
     }
 
     void allocateMemory()
@@ -50,18 +48,15 @@ public:
         groundCloudIn.reset(new pcl::PointCloud<pcl::PointXYZ>());
         nongroundCloudIn.reset(new pcl::PointCloud<pcl::PointXYZ>());
         preprocessedCloud.reset(new pcl::PointCloud<pcl::PointXYZ>());
-        cost_mat = cv::Mat(cost_mat_row, cost_mat_col, CV_32SC1, cv::Scalar::all(255));
+        cost_mat = cv::Mat(cost_mat_col,cost_mat_row, CV_32SC1, cv::Scalar::all(0));
     }
 
     void resetParameters()
     {
         groundCloudIn->clear();
         nongroundCloudIn->clear();
-        
         preprocessedCloud->clear();
-
-        cost_mat = cv::Mat(cost_mat_row, cost_mat_col, CV_32SC1, cv::Scalar::all(255));
-
+        cost_mat = cv::Mat(cost_mat_col,cost_mat_row, CV_32SC1, cv::Scalar::all(0));
     }
 
     ~local_path_maker() {}
@@ -80,13 +75,16 @@ public:
         tmp_nh.setParam("/local_path_maker_process_time", static_cast<double>(duration.count()));
 
         publish_info();
-        resetParameters();
-
+        
         // Notify the image visualization thread to update the image
         {
             std::lock_guard<std::mutex> lock(image_mutex);
             update_image = true;
         }
+
+        // Wait for the visualization thread to finish before resetting parameters
+        std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Adjust sleep duration if needed
+        resetParameters();
     }
 
     void copyPointCloud(const sensor_msgs::PointCloud2ConstPtr &laserCloudMsg)
@@ -111,36 +109,47 @@ public:
 
         for (size_t i = 0; i < cloud_size; i++)
         {
-            
             pcl::PointXYZ thisPoint = downsampled_cloud->points[i];
-
 
             if (thisPoint.z < (-1 * (LiDAR_Height + 0.2)))
             {
                 continue;
             }
 
-            if (abs(thisPoint.y) < ((cost_mat_col-1)/10) && thisPoint.x > 0 && thisPoint.x < (cost_mat_row/10) )
+            if (abs(thisPoint.y) < ((cost_mat_col-1)/10)/2 && thisPoint.x > 1.5 && thisPoint.x < (cost_mat_row/10) )
             {
                 thisPoint.z = 0; // 2D로 변환
 
+                int row_idx = -1 * static_cast<int>(thisPoint.x * 10) + cost_mat_row;
+                int col_idx = -1 * static_cast<int>(thisPoint.y * 10) + cost_mat_col/2;
 
-                int row_idx = -1 * static_cast<int>(thisPoint.y * 10) + 50;
-                int col_idx = -1 * static_cast<int>(thisPoint.x * 10) + 100;
-                
-                thisPoint.x = col_idx;
-                thisPoint.y = row_idx;
+                thisPoint.x = row_idx;
+                thisPoint.y = col_idx;
 
                 preprocessedCloud->push_back(thisPoint);
-                
-                if ((row_idx <= 100 && row_idx >= 0) && (col_idx <= 101 && col_idx >= 0))
+
+                if ((row_idx <= cost_mat_row && row_idx >= 0) && (col_idx <= cost_mat_col && col_idx >= 0))
                 {
-                    cost_mat.at<int>(row_idx, col_idx) = 0;
-                    cout << "row :: " << row_idx << " col :: " << col_idx << " == " << cost_mat.at<int>(row_idx, col_idx) <<endl;
+                    cost_mat.at<int>(row_idx, col_idx) = 255;
+                    set9x9Region(cost_mat, row_idx, col_idx);
                 }
             }
         }
+
     }
+
+    void set9x9Region(cv::Mat& img, int row, int col) {
+        int regionSize = 15;
+        int halfSize = regionSize / 2;
+
+        int top = max(row - halfSize, 0);
+        int bottom = min(row + halfSize + 1, img.rows);
+        int left = max(col - halfSize, 0);
+        int right = min(col + halfSize + 1, img.cols);
+
+        img(cv::Rect(left, top, right - left, bottom - top)) = (255);
+    }
+
 
     void publish_info()
     {
@@ -166,10 +175,13 @@ public:
                 if (update_image)
                 {
                     cv::Mat display_mat;
-                    
-                    cost_mat.convertTo(display_mat, CV_8UC1, 1);
+                    cv::Mat resized_mat;
 
-                    cv::imshow("Binary Image", display_mat);
+                    cost_mat.convertTo(display_mat, CV_8UC1, 1); // Adjust scaling if necessary
+                    std::cout << "Image size: " << cost_mat.size() << std::endl;
+                    cv::resize(display_mat, resized_mat, cv::Size(), 2, 2, cv::INTER_NEAREST);
+
+                    cv::imshow("Binary Image", resized_mat);
                     cv::waitKey(1); // 비동기적으로 키 입력을 대기
 
                     update_image = false;
