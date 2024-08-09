@@ -181,8 +181,6 @@ public:
         cost_mat.at<int>(start_px) = 150;
         cost_mat.at<int>(goal_px) = 150;
         
-        cout << "path_vec size :: " << smooth_curve.size() << endl;
-        
         size_t vec_size = traj.size();
         
         for(int i = 0; i < vec_size; i ++){
@@ -252,7 +250,6 @@ public:
                     cv::Mat resized_mat;
 
                     cost_mat.convertTo(display_mat, CV_8UC1, 1); // Adjust scaling if necessary
-                    std::cout << "Image size: " << cost_mat.size() << std::endl;
                     cv::resize(display_mat, resized_mat, cv::Size(), 5, 5, cv::INTER_NEAREST);
 
                     cv::imshow("Binary Image", resized_mat);
