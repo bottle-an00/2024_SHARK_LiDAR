@@ -354,7 +354,7 @@ public:
 
         for(int i = 0; i < cloud_size; i++){
             if(downsampled_cloud->points[i].z < 0.1 && downsampled_cloud->points[i].z > -1 * LiDAR_Height + 0.1 && downsampled_cloud->points[i].x >0){
-                if(cal_range(downsampled_cloud->points[i]) < 40 && cal_range(downsampled_cloud->points[i]) > 1.5){
+                if(cal_range(downsampled_cloud->points[i]) > 1.5){
                     near_ego_cloud->push_back(downsampled_cloud->points[i]);
                     downsampled_cloud->points[i].x +=LiDAR_to_GPS;
                     ndt_cloud->push_back(downsampled_cloud->points[i]);

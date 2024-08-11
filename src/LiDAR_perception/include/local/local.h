@@ -135,7 +135,7 @@ public:
 
             if(Non_GPS_Flag == true){
                 data2.header.stamp = ros::Time::now();
-                data2.header.frame_id = "world";
+                data2.header.frame_id = "map";
                 data2.pose.pose.position.x = e_;
                 data2.pose.pose.position.y = n_;
 

@@ -258,7 +258,11 @@ public:
                 marker.color.b = 1.0;
                 marker.color.a = 1;
                 marker.lifetime = ros::Duration(0.11);
-
+                
+                Point p = { pred_position[id][0], pred_position[id][1] };
+                if(RCA.isInsidePolygon(roiPolygon.vertices,p)){
+                    markerarray.markers.push_back(marker);
+                }
                 marker.id = 10*id + 1;
                 marker.scale.x = 0.2;
                 marker.scale.y = 0.2;
@@ -322,7 +326,7 @@ public:
                 marker_boundary.color.a = 1;
                 marker_boundary.lifetime = ros::Duration(0.11);
 
-                Point p = { pred_position[id][0], pred_position[id][1] };
+                
                 Point est_p = { pred_position[id][0]+Nsec*pred_position[id][2], pred_position[id][1]+Nsec*pred_position[id][3] };
 
                 if(RCA.isInsidePolygon(roiPolygon.vertices,p) || RCA.isInsidePolygon(roiPolygon.vertices,est_p)){

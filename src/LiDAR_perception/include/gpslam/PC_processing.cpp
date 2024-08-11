@@ -53,8 +53,8 @@ public:
         pubGroundMap = nh.advertise<sensor_msgs::PointCloud2> ("/GroundMap", 1); 
 
         downSizeFilterLane.setLeafSize(0.2, 0.2, 0.2);
-        downSizeFilterNonGround.setLeafSize(0.4, 0.4, 0.4);
-        downSizeFilterGround.setLeafSize(0.4, 0.4, 0.4);
+        downSizeFilterNonGround.setLeafSize(1.2, 1.2, 1.2);
+        downSizeFilterGround.setLeafSize(1.2, 1.2, 1.2);
 
         allocateMemory();
         resetParameters();

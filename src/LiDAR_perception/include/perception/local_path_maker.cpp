@@ -150,6 +150,7 @@ public:
         img(cv::Rect(left, top, right - left, bottom - top)) = (255);
     }
 
+    
 
     void publish_info()
     {
