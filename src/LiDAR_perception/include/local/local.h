@@ -154,7 +154,7 @@ public:
             nh.setParam("/ego_location_x",ndt_msgs.pose.position.x);
             nh.setParam("/ego_location_y" , ndt_msgs.pose.position.y);
 
-            publishTF(Gps_msg->header.stamp, ndt_msgs.pose.position.x, ndt_msgs.pose.position.y);
+            //publishTF(Gps_msg->header.stamp, ndt_msgs.pose.position.x, ndt_msgs.pose.position.y);
 
         }
 

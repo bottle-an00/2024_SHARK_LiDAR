@@ -135,17 +135,9 @@ public:
 
                 control_pt_idx[1] = *(iter);
                 control_pt_idx[2] = *(iter) + interval/2;
-                //cout << "p0 :: " << control_pt_idx[0] << " p1 :: "<<control_pt_idx[1] << " p2 :: " << control_pt_idx[2] << endl;
                 
                 vector<Point> p = {traj[control_pt_idx[0]], traj[control_pt_idx[1]], traj[control_pt_idx[2]]};
                 
-                // for(int i=0; i< p.size(); i++){
-                //     PointType thisPoint;
-                //     thisPoint.x = p[i].x;
-                //     thisPoint.y = p[i].y;
-                //     path_PC->push_back(thisPoint);
-                // }
-
                 quadraticBezier(p[0], p[1], p[2], target_part, path_PC);
                 prev_idx = control_pt_idx[2];
             }
