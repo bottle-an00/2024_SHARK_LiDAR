@@ -35,7 +35,7 @@ if __name__ == "__main__":
     rospy.init_node('vehicle_control')
     pub = rospy.Publisher('/ctrl_cmd', CtrlCmd, queue_size=10)
     
-    speed =4.0  # 초기 속도 설정
+    speed =20.0  # 초기 속도 설정
     steering_angle = 0.0  # 초기 조향각 설정
     brake = 0.0
     rate = rospy.Rate(10)  # 10Hz
@@ -49,10 +49,10 @@ if __name__ == "__main__":
                 break
             elif key == 'w':  # 위 방향키
                 print("press up")
-                speed = 4
+                speed = 15
             elif key == 's':  # 아래 방향키
                 print("press down")
-                speed -= 2
+                speed -= 4
             elif key == 'd':  # 오른쪽 방향키
                 print("press right")
                 steering_angle += -0.1
