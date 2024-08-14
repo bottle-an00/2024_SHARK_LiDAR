@@ -172,7 +172,7 @@ public:
             ConcentricZoneModel_.push_back(z);
         }
     }
-
+    
     void estimate_ground(pcl::PointCloud<PointT> cloud_in,
                          pcl::PointCloud<PointT> &cloud_ground, pcl::PointCloud<PointT> &cloud_nonground, double &time_taken);
 
