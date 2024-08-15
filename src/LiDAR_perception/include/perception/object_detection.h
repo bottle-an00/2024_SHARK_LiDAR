@@ -60,6 +60,7 @@ private:
     pcl::KdTreeFLANN<PointType> Ground_kdtree;
     
     Ego_status ego_info;
+    Ego_status next_N_index_pos;
     
     vector<FusionEKF> EKFs;
     vector<VectorXd> pred_position;
@@ -166,7 +167,10 @@ public:
         ROICloud->clear();
         ndtCloud->clear();
         
-        id_list.clear();
+        if(!jungjangpee_flag){
+            id_list.clear();
+        }
+
         detected_objects.clear();
         Clustered_Cloud->clear();
         
@@ -216,8 +220,10 @@ public:
         ego_info.pitch = localMsg->pose.orientation.y;
 
         ego_info.yaw = localMsg->pose.orientation.z;
+        
+        next_N_index_pos.yaw = ego_info.yaw;
 
-        current_index = index_finder(path,ego_info,current_index);
+        current_index = index_finder(path,ego_info,current_index, next_N_index_pos ,5);
 
         if(cal_diff(ego_info,path.position[current_index]) < 4 && current_index > 1730 && current_index < 2060) {
             RCA.get_foward_ROI(path,roiPolygon,current_index,400,6.0);
@@ -352,7 +358,8 @@ public:
     void getIdList(){
         deque<vector<int>> id_vec;
         id_vec = id_list_que.getData();
-        id_list.clear();
+        
+        if(!jungjangpee_flag) id_list.clear();
 
         for(auto vec : id_vec){
             id_list.insert(id_list.end(),vec.begin(),vec.end());

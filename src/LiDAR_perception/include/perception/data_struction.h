@@ -150,7 +150,7 @@ void read_path(path_info& path_info) {
     std::cout << "Coordinates saved successfully. Size :: " << path_info.position.size() << std::endl;
 }
 
-int index_finder(path_info path_info, Ego_status ego_info, int& cur_idx){
+int index_finder(path_info path_info, Ego_status ego_info, int& cur_idx, Ego_status next_N_index_pos, int N){
     int k = path_info.position.size();
     double min_dist = 100;
     int index = -1;
@@ -165,6 +165,15 @@ int index_finder(path_info path_info, Ego_status ego_info, int& cur_idx){
             }
         }
     }
+
+    if(index + N < (k-1) ){
+        next_N_index_pos.curr.x = path_info.position[index + N][0];
+        next_N_index_pos.curr.y = path_info.position[index + N][1];
+    }else{
+        next_N_index_pos.curr.x = path_info.position[k-1][0];
+        next_N_index_pos.curr.y = path_info.position[k-1][1];
+    }  
+    cout << "x: " << next_N_index_pos.curr.x << " y :: " <<next_N_index_pos.curr.y << endl;
     return index;
 }
 
@@ -248,7 +257,7 @@ double do_dot_product(PointType point, Ego_status ego_info){
     refPoint.y = sin(ego_info.yaw);
 
     double output = thisPoint.x*refPoint.x + thisPoint.y*refPoint.y;
-    
+    cout << "so :: " << output << endl;
     return output;
 
 }

@@ -231,7 +231,7 @@ public:
             }
 
             if(mode == 1 && iter->first >10){
-                continue;
+                break;
             }
             output.push_back(iter->second);
             ++iter;
@@ -292,8 +292,8 @@ public:
         vector<Polygon> near_ego_parking_zone = get_nearest_N_zone(4,parking_zone,ego_info,1);//가장 가까운 parking zone 4개를 보되 10m이상 떨어진 parking zone에 대해서는 판단하지 않는다.
         
         vector<Polygon> parking_available_area;
-        for(auto parking_zone : near_ego_parking_zone){
 
+        for(auto parking_zone : near_ego_parking_zone){
             bool empty_parkin_zone = true;
 
             int point_num =5;
@@ -315,9 +315,58 @@ public:
             if(empty_parkin_zone) parking_available_area.push_back(parking_zone);
 
         }
-        return parking_available_area;
+
+        return get_nearest_Parking_Zone(parking_available_area, ego_info);
     }
     
+    vector<Polygon> get_nearest_Parking_Zone(vector<Polygon>& available_parking_zone, Ego_status& ego_info){
+        map<double,std::pair<Point,Polygon>> parking_zone_info;
+
+        vector<Polygon> output;
+
+        for(auto zone :available_parking_zone){//각각의 zone에 현재 위치에 가장 가까운 점까지의 거리를 추출
+            map<double,Point> nearest4points_per_inner_zone;
+            
+            double min_dst;
+            Point mid_point;
+
+            for(auto point : zone.vertices){
+
+                double dst = sqrt((point.x - ego_info.curr.x)*(point.x - ego_info.curr.x) 
+                    + (point.y - ego_info.curr.y)*(point.y - ego_info.curr.y));
+                
+                nearest4points_per_inner_zone[dst] = point;
+                mid_point.x += point.x;
+                mid_point.y += point.y;
+                
+            }
+
+            mid_point.x /= 4;
+            mid_point.y /= 4;
+
+            auto iter = nearest4points_per_inner_zone.begin();
+
+            min_dst = iter->first;
+            
+            parking_zone_info[min_dst].first = mid_point;//주차 가능한 공간 중 가장 가까운 순으로 배열됨
+            parking_zone_info[min_dst].second = zone;//주차 가능한 공간 중 가장 가까운 순으로 배열됨
+        }
+        
+        for(auto iter =parking_zone_info.begin(); iter != parking_zone_info.end(); iter++){
+
+            PointType thisPoint;
+            thisPoint.x = iter->second.first.x;
+            thisPoint.y = iter->second.first.y;
+
+            if(do_dot_product(thisPoint,ego_info) > 0){
+                cout << do_dot_product(thisPoint,ego_info) <<endl;
+                output.push_back(iter->second.second);
+                break;
+            }
+        }
+
+        return output;
+    }
 
     void set_ROI_RCA(pcl::PointCloud<PointType>::Ptr input_cloud, pcl::PointCloud<PointType>::Ptr output_cloud, pcl::PointCloud<PointType>::Ptr ndt_cloud, Polygon& outer, vector<Polygon>& inners, Ego_status& ego_info){
 
