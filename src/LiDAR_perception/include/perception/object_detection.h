@@ -86,7 +86,7 @@ private:
     vector<Polygon> available_parkin_zone;
 
     float dx, dy, dyaw;
-
+    bool jungjangpee_flag;
     int current_index=0;
 public:
 
@@ -150,6 +150,8 @@ public:
         outer = RCA.readOuterPolygon();
         inners = RCA.readInnerPolygon();
         parking_zone = RCA.readParkingPolygon();
+        
+        jungjangpee_flag = false;
 
         read_path(path);
     }
@@ -174,13 +176,14 @@ public:
         outer_zone.markers.clear();
         nearest_inner_zone.markers.clear();
         roi_zone_markerarray.markers.clear();
+        parking_zone_markerarray.markers.clear();
 
         ekf_info_markerarray.markers.clear();
         ekf_obj_boundary.markers.clear();
 
         near_ego_inners.clear();
 
-        
+        available_parkin_zone.clear();
     }
 
     ~Object_Detection(){}
@@ -216,7 +219,13 @@ public:
 
         current_index = index_finder(path,ego_info,current_index);
 
-        if(cal_diff(ego_info,path.position[current_index]) < 4) RCA.get_foward_ROI(path,roiPolygon,current_index,200,6.0);
+        if(cal_diff(ego_info,path.position[current_index]) < 4 && current_index > 1730 && current_index < 2060) {
+            RCA.get_foward_ROI(path,roiPolygon,current_index,400,6.0);
+            jungjangpee_flag = true;
+        }
+        else if(cal_diff(ego_info,path.position[current_index]) < 4) {
+            RCA.get_foward_ROI(path,roiPolygon,current_index,200,6.0);
+        }
         else roiPolygon.vertices.clear();
         
         ros::NodeHandle tmp_nh;
@@ -256,23 +265,27 @@ public:
         //
 
         //parking_area_detection
-        if(ROICloud->points.size()>0){
+        if(ROICloud->points.size() > 0){
             available_parkin_zone = RCA.get_available_parking_area(parking_zone, ROICloud, ego_info);
         }
         //
+        if(jungjangpee_flag){
+            detect_object_JJP(ROICloud, 1.0 , 5, 2000);
 
-        //Object Detection
-        clustering(ROICloud,ObjCandidateCloud[0], 1.0 , 5, 2000);
-        
-        Adaptive_Clustering(ObjCandidateCloud[0]);
+            tracking(detected_objects);
+        }else{
+            //Object Detection
+            clustering(ROICloud,ObjCandidateCloud[0], 1.0 , 5, 2000);
 
-        detect_object(ObjCandidateCloud[1]);
-        //
+            Adaptive_Clustering(ObjCandidateCloud[0]);
 
-        //tracking
-        tracking(detected_objects);
-        //
+            detect_object(ObjCandidateCloud[1]);
+            //
 
+            //tracking
+            tracking(detected_objects);
+            //
+        }
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
         
@@ -284,7 +297,30 @@ public:
 
         resetParameters();
     }
-    
+
+    void detect_object_JJP(pcl::PointCloud<PointType>::Ptr input_cloud, double clusterTolerance, int minSize , int maxSize){
+        clustering(ROICloud,ObjCandidateCloud[0], 1.0 , 3, 2000);
+
+        for (auto iter = ObjCandidateCloud[0].begin(); iter != ObjCandidateCloud[0].end(); ++iter){
+            PointType maxPoint,minPoint;
+            pcl::getMinMax3D(*(*iter), minPoint, maxPoint);
+                        
+            Object_info obj_info;
+            obj_info.max_point = maxPoint;
+            obj_info.min_point = minPoint;
+            obj_info.mid_point.x = (maxPoint.x + minPoint.x)/2;
+            obj_info.mid_point.y = (maxPoint.y + minPoint.y)/2;
+            obj_info.mid_point.z = (maxPoint.z + minPoint.z)/2;
+
+            (obj_info.obj_cloud).reset(new pcl::PointCloud<PointType>());
+            *(obj_info.obj_cloud) = *(*iter);
+            
+            *Clustered_Cloud += *(*iter);
+
+            detected_objects.push_back(obj_info); 
+        }
+    }
+
     void tracking(vector<Object_info>& detected_objects){
         
         Tt.process_matching(detected_objects, object_DB, id_list);
@@ -421,9 +457,9 @@ public:
         sensor_msgs::PointCloud2 laserCloudTemp;
 
         if (pubNDTCloud.getNumSubscribers() != 0){
-            pcl::toROSMsg(*ndtCloud, laserCloudTemp);
+            pcl::toROSMsg(*ROICloud, laserCloudTemp);
             laserCloudTemp.header.stamp = cloudHeader.stamp;
-            laserCloudTemp.header.frame_id ="velodyne";
+            laserCloudTemp.header.frame_id ="map";
             pubNDTCloud.publish(laserCloudTemp);
         }
 

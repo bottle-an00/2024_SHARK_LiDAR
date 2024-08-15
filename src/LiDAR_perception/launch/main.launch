@@ -18,6 +18,7 @@
 
   <arg name="multi" default='false' />
   <arg name="local_test" default='false' />
+  <arg name="lpm" default='false' />
   <arg name="check_process" default='true' />
 
   <!-- main -->
@@ -28,11 +29,12 @@
   <include file="$(find LiDAR_perception)/launch/run.launch">
     <arg name="local_test" value="$(arg local_test)" />
     <arg name="check_process" value="$(arg check_process)" />
+    <arg name="lpm" value="$(arg lpm)" />
   </include>
     
   <include file="$(find patchworkpp)/launch/demo.launch" />
 
-  <include file="$(find ndt_localizer)/launch/ndt_localizer.launch" />
-    
+  <include file="$(find ndt_localizer)/launch/ndt_localizer.launch" if="$(eval arg('lpm') == false)" />
+
 
 </launch>

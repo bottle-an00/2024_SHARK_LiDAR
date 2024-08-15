@@ -211,6 +211,7 @@ public:
                     + (point.y - ego_info.curr.y)*(point.y - ego_info.curr.y));
                 
                 nearest4points_per_inner_zone[dst] = point;
+                
             }
 
             auto iter = nearest4points_per_inner_zone.begin();
@@ -288,7 +289,7 @@ public:
         pcl::KdTreeFLANN<PointType> RPC_kdtree;
         RPC_kdtree.setInputCloud(roi_cloud);
 
-        vector<Polygon> near_ego_parking_zone = get_nearest_N_zone(10,parking_zone,ego_info,1);//10m이상 떨어진 parking zone에 대해서는 판단하지 않는다.
+        vector<Polygon> near_ego_parking_zone = get_nearest_N_zone(4,parking_zone,ego_info,1);//가장 가까운 parking zone 4개를 보되 10m이상 떨어진 parking zone에 대해서는 판단하지 않는다.
         
         vector<Polygon> parking_available_area;
         for(auto parking_zone : near_ego_parking_zone){
@@ -317,26 +318,6 @@ public:
         return parking_available_area;
     }
     
-    void getOutliar(pcl::PointCloud<PointType>::Ptr input_cloud, pcl::PointCloud<PointType>::Ptr output_cloud, Polygon& outer, vector<Polygon>& inners, Ego_status& ego_info){
-        
-        pcl::PointCloud<PointType>::Ptr downsampled_cloud(new pcl::PointCloud<PointType>);
-        
-        pcl::VoxelGrid<PointType> sor;
-        sor.setInputCloud(input_cloud);  
-        sor.setLeafSize(0.10f, 0.10f, 0.10f);  
-        
-        sor.filter(*downsampled_cloud);
-
-        size_t cloud_size = downsampled_cloud->points.size();
-
-        for(int i = 0; i < cloud_size; i++){    
-            Point p = {downsampled_cloud->points[i].x, downsampled_cloud->points[i].y}; 
-            
-            if(isInsidePolygon(outer.vertices, p)){
-                output_cloud->push_back(downsampled_cloud->points[i]);
-            }
-        }
-    }
 
     void set_ROI_RCA(pcl::PointCloud<PointType>::Ptr input_cloud, pcl::PointCloud<PointType>::Ptr output_cloud, pcl::PointCloud<PointType>::Ptr ndt_cloud, Polygon& outer, vector<Polygon>& inners, Ego_status& ego_info){
 
@@ -353,7 +334,7 @@ public:
         size_t cloud_size = downsampled_cloud->points.size();
 
         for(int i = 0; i < cloud_size; i++){
-            if(downsampled_cloud->points[i].z < 0.1 && downsampled_cloud->points[i].z > -1 * LiDAR_Height + 0.1 && downsampled_cloud->points[i].x >0){
+            if(downsampled_cloud->points[i].z < 0.1 && downsampled_cloud->points[i].z > -1 * LiDAR_Height && downsampled_cloud->points[i].x >0){
                 if(cal_range(downsampled_cloud->points[i]) > 1.5){
                     near_ego_cloud->push_back(downsampled_cloud->points[i]);
                     downsampled_cloud->points[i].x +=LiDAR_to_GPS;

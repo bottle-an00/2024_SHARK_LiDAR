@@ -237,7 +237,22 @@ PointType vector2point(const VectorXf& v, PointType start_point){
 
     return tmp_point;
 } 
-     
+
+double do_dot_product(PointType point, Ego_status ego_info){
+    PointType thisPoint;
+    thisPoint.x = point.x - ego_info.curr.x;
+    thisPoint.y = point.y - ego_info.curr.y;
+
+    PointType refPoint;
+    refPoint.x = cos(ego_info.yaw);
+    refPoint.y = sin(ego_info.yaw);
+
+    double output = thisPoint.x*refPoint.x + thisPoint.y*refPoint.y;
+    
+    return output;
+
+}
+
 VectorXf conduct_PCA (pcl::PointCloud<PointType>::Ptr input_cloud, int num){
     //num = 0이면 주축(분산도가 가장 큰 방향의 벡터를 의미함) , num=2이면 분산도가 가장 작은 방향의 벡터를 의미함
 
