@@ -174,13 +174,14 @@ public:
         outer_zone.markers.clear();
         nearest_inner_zone.markers.clear();
         roi_zone_markerarray.markers.clear();
+        parking_zone_markerarray.markers.clear();
 
         ekf_info_markerarray.markers.clear();
         ekf_obj_boundary.markers.clear();
 
         near_ego_inners.clear();
 
-        
+        available_parkin_zone.clear();
     }
 
     ~Object_Detection(){}
@@ -256,9 +257,7 @@ public:
         //
 
         //parking_area_detection
-        if(ROICloud->points.size()>0){
-            available_parkin_zone = RCA.get_available_parking_area(parking_zone, ROICloud, ego_info);
-        }
+        available_parkin_zone = RCA.get_available_parking_area(parking_zone, ROICloud, ego_info);
         //
 
         //Object Detection

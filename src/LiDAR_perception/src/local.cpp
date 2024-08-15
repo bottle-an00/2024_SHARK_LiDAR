@@ -8,6 +8,17 @@ int main(int argc, char** argv){
     
     Local local;
 
+    // ros::Rate rate(30);
+    // while (ros::ok())
+    // {
+    //     ros::spinOnce();
+        
+    //     if(local.gps_init && local.imu_init) {
+    //         local.publish_EKF_local(local.prev_imu_msg);
+    //     }
+
+    //     rate.sleep();
+    // }
     ros::spin();
     return 0;
 }

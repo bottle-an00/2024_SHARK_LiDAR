@@ -447,6 +447,8 @@ public:
             line_strip.color.b = b;
             line_strip.color.a = 1.0;
 
+            line_strip.lifetime = ros::Duration(0.11);
+
             geometry_msgs::Point p;
             p.x = iter->x;
             p.y = iter->y;

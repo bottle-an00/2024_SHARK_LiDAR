@@ -210,7 +210,22 @@ public:
                 double dst = sqrt((point.x - ego_info.curr.x)*(point.x - ego_info.curr.x) 
                     + (point.y - ego_info.curr.y)*(point.y - ego_info.curr.y));
                 
-                nearest4points_per_inner_zone[dst] = point;
+                
+
+                if(mode == 1){
+                    PointType tmp;
+                    tmp.x =point.x;
+                    tmp.y =point.y;
+
+                    if(do_dot_product(tmp,ego_info) > 0){
+                        nearest4points_per_inner_zone[dst] = point;
+                    }
+                    else{
+                        break;
+                    }
+                }else{
+                    nearest4points_per_inner_zone[dst] = point;
+                }
             }
 
             auto iter = nearest4points_per_inner_zone.begin();
@@ -288,7 +303,7 @@ public:
         pcl::KdTreeFLANN<PointType> RPC_kdtree;
         RPC_kdtree.setInputCloud(roi_cloud);
 
-        vector<Polygon> near_ego_parking_zone = get_nearest_N_zone(10,parking_zone,ego_info,1);//10m이상 떨어진 parking zone에 대해서는 판단하지 않는다.
+        vector<Polygon> near_ego_parking_zone = get_nearest_N_zone(4,parking_zone,ego_info,1);//가장 가까운 parking zone 4개를 보되 10m이상 떨어진 parking zone에 대해서는 판단하지 않는다.
         
         vector<Polygon> parking_available_area;
         for(auto parking_zone : near_ego_parking_zone){
