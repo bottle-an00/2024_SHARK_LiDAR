@@ -230,7 +230,7 @@ public:
                 return output;
             }
 
-            if(mode == 1 && iter->first >10){
+            if(mode == 1 && iter->first >15.0){
                 break;
             }
             output.push_back(iter->second);
@@ -289,14 +289,14 @@ public:
         pcl::KdTreeFLANN<PointType> RPC_kdtree;
         RPC_kdtree.setInputCloud(roi_cloud);
 
-        vector<Polygon> near_ego_parking_zone = get_nearest_N_zone(4,parking_zone,ego_info,1);//가장 가까운 parking zone 4개를 보되 10m이상 떨어진 parking zone에 대해서는 판단하지 않는다.
+        vector<Polygon> near_ego_parking_zone = get_nearest_N_zone(6,parking_zone,ego_info,1);//가장 가까운 parking zone 4개를 보되 10m이상 떨어진 parking zone에 대해서는 판단하지 않는다.
         
         vector<Polygon> parking_available_area;
 
         for(auto parking_zone : near_ego_parking_zone){
             bool empty_parkin_zone = true;
 
-            int point_num =5;
+            int point_num = 5;
             std::vector<int> indices;
             std::vector<float> distances;
 
@@ -324,11 +324,13 @@ public:
 
         vector<Polygon> output;
 
-        for(auto zone :available_parking_zone){//각각의 zone에 현재 위치에 가장 가까운 점까지의 거리를 추출
+        for(auto zone : available_parking_zone){//각각의 zone에 현재 위치에 가장 가까운 점까지의 거리를 추출
             map<double,Point> nearest4points_per_inner_zone;
             
             double min_dst;
             Point mid_point;
+            mid_point.x = 0.0;
+            mid_point.y = 0.0;
 
             for(auto point : zone.vertices){
 
@@ -336,9 +338,9 @@ public:
                     + (point.y - ego_info.curr.y)*(point.y - ego_info.curr.y));
                 
                 nearest4points_per_inner_zone[dst] = point;
+
                 mid_point.x += point.x;
                 mid_point.y += point.y;
-                
             }
 
             mid_point.x /= 4;
@@ -350,6 +352,7 @@ public:
             
             parking_zone_info[min_dst].first = mid_point;//주차 가능한 공간 중 가장 가까운 순으로 배열됨
             parking_zone_info[min_dst].second = zone;//주차 가능한 공간 중 가장 가까운 순으로 배열됨
+
         }
         
         for(auto iter =parking_zone_info.begin(); iter != parking_zone_info.end(); iter++){
@@ -357,9 +360,7 @@ public:
             PointType thisPoint;
             thisPoint.x = iter->second.first.x;
             thisPoint.y = iter->second.first.y;
-
             if(do_dot_product(thisPoint,ego_info) > 0){
-                cout << do_dot_product(thisPoint,ego_info) <<endl;
                 output.push_back(iter->second.second);
                 break;
             }

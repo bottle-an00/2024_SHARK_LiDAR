@@ -223,7 +223,7 @@ public:
         
         next_N_index_pos.yaw = ego_info.yaw;
 
-        current_index = index_finder(path,ego_info,current_index, next_N_index_pos ,5);
+        current_index = index_finder(path,ego_info,current_index, next_N_index_pos ,10);
 
         if(cal_diff(ego_info,path.position[current_index]) < 4 && current_index > 1730 && current_index < 2060) {
             RCA.get_foward_ROI(path,roiPolygon,current_index,400,6.0);
@@ -272,7 +272,7 @@ public:
 
         //parking_area_detection
         if(ROICloud->points.size() > 0){
-            available_parkin_zone = RCA.get_available_parking_area(parking_zone, ROICloud, ego_info);
+            available_parkin_zone = RCA.get_available_parking_area(parking_zone, ROICloud, next_N_index_pos);
         }
         //
         if(jungjangpee_flag){
