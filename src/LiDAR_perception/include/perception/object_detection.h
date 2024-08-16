@@ -228,12 +228,15 @@ public:
         if(cal_diff(ego_info,path.position[current_index]) < 4 && current_index > 1730 && current_index < 2060) {
             RCA.get_foward_ROI(path,roiPolygon,current_index,400,6.0);
             jungjangpee_flag = true;
-        }
-        else if(cal_diff(ego_info,path.position[current_index]) < 4) {
+
+        }else if(cal_diff(ego_info,path.position[current_index]) < 4) {
             RCA.get_foward_ROI(path,roiPolygon,current_index,200,6.0);
+            jungjangpee_flag = false;
+
+        }else {
+            roiPolygon.vertices.clear();
+            jungjangpee_flag = false;
         }
-        else roiPolygon.vertices.clear();
-        
         ros::NodeHandle tmp_nh;
         tmp_nh.setParam("/OD_working",true);
         tmp_nh.setParam("/currnet_index",current_index);
