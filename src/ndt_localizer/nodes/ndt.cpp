@@ -209,7 +209,7 @@ void NdtLocalizer::callback_pointcloud(
     transform_probability < converged_param_transform_probability_) {
     is_converged = false;
     ++skipping_publish_num;
-    std::cout << "Not Converged" << std::endl;
+    //std::cout << "Not Converged" << std::endl;
   } else {
     skipping_publish_num = 0;
   }
@@ -233,9 +233,9 @@ void NdtLocalizer::callback_pointcloud(
   result_pose_stamped_msg.header.frame_id = map_frame_;
   result_pose_stamped_msg.pose = result_pose_msg;
 
-  if (is_converged) {
+  //if (is_converged) {
     ndt_pose_pub_.publish(result_pose_stamped_msg);
-  }
+  //}
 
   // publish tf(map frame to base frame)
   publish_tf(map_frame_, base_frame_, result_pose_stamped_msg);

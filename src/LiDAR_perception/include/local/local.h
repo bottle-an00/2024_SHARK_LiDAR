@@ -148,14 +148,11 @@ public:
                 Non_GPS_Flag = false;
             }
 
-            publish_EKF_local(Imu_msg);
+            //publish_EKF_local(Imu_msg);
             
             nh.setParam("/local_working", true);
             nh.setParam("/ego_location_x",ndt_msgs.pose.position.x);
             nh.setParam("/ego_location_y" , ndt_msgs.pose.position.y);
-
-            //publishTF(Gps_msg->header.stamp, ndt_msgs.pose.position.x, ndt_msgs.pose.position.y);
-
         }
 
     }
@@ -192,7 +189,9 @@ public:
         ndt_msgs.pose.orientation.z = yaw;
         ndt_msgs.pose.orientation.w = 1.0;
 
-        // pub_local.publish(ndt_msgs);
+        pub_local.publish(ndt_msgs);
+
+        publishTF(ndt_msgs.header.stamp, ndt_msgs.pose.position.x, ndt_msgs.pose.position.y);
     }
     
     void publish_EKF_local(const sensor_msgs::Imu::ConstPtr& Imu_msg){
@@ -211,6 +210,7 @@ public:
         ndt_msgs.pose.position.y = pred_local[1];
         
         pub_local.publish(ndt_msgs);
+            
     }
 
     void publishTF(ros::Time stamp_, double ego_x, double ego_y){
