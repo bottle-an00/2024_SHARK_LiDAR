@@ -292,31 +292,38 @@ public:
         vector<Polygon> near_ego_parking_zone = get_nearest_N_zone(6,parking_zone,ego_info,1);//가장 가까운 parking zone 4개를 보되 10m이상 떨어진 parking zone에 대해서는 판단하지 않는다.
         
         vector<Polygon> parking_available_area;
+        if(near_ego_parking_zone.size() > 0){
+            for(auto parking_zone : near_ego_parking_zone){
+                bool empty_parkin_zone = true;
 
-        for(auto parking_zone : near_ego_parking_zone){
-            bool empty_parkin_zone = true;
-
-            int point_num = 5;
-            std::vector<int> indices;
-            std::vector<float> distances;
+                int point_num = 5;
+                std::vector<int> indices;
+                std::vector<float> distances;
 
 
-            RPC_kdtree.nearestKSearch(parking_zone.mid_point, point_num ,indices, distances);
+                RPC_kdtree.nearestKSearch(parking_zone.mid_point, point_num ,indices, distances);
+                if(roi_cloud->points.size() < point_num)
+                    point_num = roi_cloud->points.size();
 
-            for(int i=0;i <point_num; i++){
-                Point p = {roi_cloud->points[indices[i]].x, roi_cloud->points[indices[i]].y}; 
+                for(int i=0;i <point_num; i++){
 
-                if(isInsidePolygon(parking_zone.vertices, p)){
-                    empty_parkin_zone = false;
-                    break;
+                    Point p = {roi_cloud->points[indices[i]].x, roi_cloud->points[indices[i]].y}; 
+
+                    if(isInsidePolygon(parking_zone.vertices, p)){
+                        empty_parkin_zone = false;
+                        break;
+                    }
                 }
+
+                if(empty_parkin_zone) parking_available_area.push_back(parking_zone);
             }
-
-            if(empty_parkin_zone) parking_available_area.push_back(parking_zone);
-
         }
 
-        return get_nearest_Parking_Zone(parking_available_area, ego_info);
+        if(near_ego_parking_zone.size() > 0){
+            return get_nearest_Parking_Zone(parking_available_area, ego_info);
+        }else{ 
+            return near_ego_parking_zone;
+        }
     }
     
     vector<Polygon> get_nearest_Parking_Zone(vector<Polygon>& available_parking_zone, Ego_status& ego_info){

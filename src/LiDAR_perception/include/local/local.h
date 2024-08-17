@@ -147,7 +147,6 @@ public:
 
                 Non_GPS_Flag = false;
             }
-
             //publish_EKF_local(Imu_msg);
             
             nh.setParam("/local_working", true);

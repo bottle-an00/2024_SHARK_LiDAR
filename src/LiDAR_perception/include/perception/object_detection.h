@@ -277,11 +277,13 @@ public:
         if(ROICloud->points.size() > 0){
             available_parkin_zone = RCA.get_available_parking_area(parking_zone, ROICloud, next_N_index_pos);
         }
+
         //
         if(jungjangpee_flag){
             detect_object_JJP(ROICloud, 1.0 , 5, 2000);
 
             tracking(detected_objects);
+            
         }else{
             //Object Detection
             clustering(ROICloud,ObjCandidateCloud[0], 1.0 , 5, 2000);
@@ -294,6 +296,7 @@ public:
             //tracking
             tracking(detected_objects);
             //
+
         }
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
