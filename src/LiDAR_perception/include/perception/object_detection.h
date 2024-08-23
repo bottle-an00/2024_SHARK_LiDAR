@@ -89,11 +89,12 @@ private:
     float dx, dy, dyaw;
     bool jungjangpee_flag;
     int current_index=0;
+
 public:
 
     Object_Detection():
         nh("~"){
-
+        
         subNonGroundCloud.subscribe(nh, "/ground_segmentation/nonground", 1);
         subGroundCloud.subscribe(nh, "/ground_segmentation/ground", 1);
         subLocal.subscribe(nh, "/local_msgs_for_vision2", 10);
@@ -502,7 +503,7 @@ public:
             pubNearestInner.publish(nearest_inner_zone);
         }
         if(pubParkingZone.getNumSubscribers() != 0){
-            Vt.parking_available_area_visualization(parking_zone_markerarray,available_parkin_zone);
+            Vt.parking_available_area_visualization(path,parking_zone_markerarray,available_parkin_zone,ego_info);
             pubParkingZone.publish(parking_zone_markerarray);
         }
         if(pubROIZone.getNumSubscribers() != 0){
@@ -514,4 +515,3 @@ public:
     }
     
 };
-

@@ -418,12 +418,68 @@ public:
         
     }
     
-    void parking_available_area_visualization(visualization_msgs::MarkerArray& parking_zone_markerarray ,vector<Polygon>& parking_zone){
+    void parking_available_area_visualization(path_info path, visualization_msgs::MarkerArray& parking_zone_markerarray ,vector<Polygon>& parking_zone, Ego_status ego_info){
         int id =0; 
 
         for(auto zone : parking_zone){
-            int zone_start =id;
-            getPolygonInfo(id, parking_zone_markerarray,zone, zone_start);
+            getParkingPolygonInfo(id, path, parking_zone_markerarray,zone, ego_info);
+        }
+    }
+
+    void getParkingPolygonInfo(int& id, path_info path, visualization_msgs::MarkerArray& RCA_Lines ,Polygon &zone,Ego_status ego_info, float r = 1.0, float g = 1.0 ,float b = 0.0){
+        geometry_msgs::Point first_points;
+        map<double,Point> parking_zone_info;
+        Ego_status parking_path;
+
+        for(vector<Point>::const_iterator iter = zone.vertices.begin();iter != zone.vertices.end();iter++){
+
+            parking_finder(path, *(iter), 3292, parking_path);
+            double range = cal_diff(parking_path, *iter);
+
+            parking_zone_info[range] = *iter;
+        }
+        
+        vector<Point> vec;
+
+        for(map<double,Point>::const_iterator iter = parking_zone_info.begin(); iter != parking_zone_info.end(); iter++){
+            if(vec.size() == 2){
+                break;
+            }
+
+            vec.push_back((*iter).second);
+        }
+
+        for(vector<Point>::const_iterator iter = vec.begin();iter != vec.end();iter++){
+            
+            visualization_msgs::Marker marker;
+
+            marker.header.frame_id = "map";
+            marker.header.stamp = ros::Time().now();
+            marker.ns ="Parking point";
+            marker.id = id;
+            
+            marker.type = visualization_msgs::Marker::SPHERE; 
+            marker.action = visualization_msgs::Marker::ADD;
+            marker.pose.position.x = (*iter).x;
+            marker.pose.position.y = (*iter).y;
+            
+            marker.pose.orientation.x = 0.0;
+            marker.pose.orientation.y = 0.0;
+            marker.pose.orientation.z = 0.0;
+            
+            marker.scale.x = 0.5;
+            marker.scale.y = 0.5;
+            marker.scale.z = 0.5;
+
+            marker.color.r = 0.0;
+            marker.color.g = 0.0;
+            marker.color.b = 1.0;
+            marker.color.a = 1;
+            marker.lifetime = ros::Duration(0.11);
+
+            id++;
+
+            RCA_Lines.markers.push_back(marker);
         }
     }
 

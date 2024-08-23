@@ -30,6 +30,8 @@ private:
     bool OD_working =false;
     double OD_process_time = 0.0;
 
+    int contest_status = 0;
+
 public:
     status_manager():
         nh("~"){
@@ -54,6 +56,9 @@ public:
         nh.getParam("/OD_working", OD_working);
         nh.getParam("/OD_process_time", OD_process_time);
 
+        nh.getParam("/status", contest_status);
+
+
     }
 
     void print_status(){
@@ -61,6 +66,8 @@ public:
         ROS_INFO_STREAM("\033[1;37m"<< endl 
         <<"///////////////////////////////////////////////////" << endl << endl << endl
         
+        << "Contest Status :: " << "\033[1;3;33m"<< contest_status << " ms" << endl << "\033[0;1;37m"<<endl << endl
+
         << "NDT_Localization :: " << "\033[1;3;33m" <<  (ndt_working ? "ON" : "OFF") << "\033[0;1;37m" <<endl
         << "NDT Process Time :: " << "\033[1;3;33m" << ndt_process_time <<" ms" << "\033[0;1;37m" << endl<<endl
         

@@ -17,6 +17,39 @@ struct Polygon {
     PointType mid_point;
 };
 
+double cal_diff(Ego_status ego_info , Point point){
+    double dx = ego_info.curr.x - point.x;
+    double dy = ego_info.curr.y - point.y; 
+        
+    return sqrt(dx*dx + dy*dy);
+}
+
+
+void parking_finder(path_info path_info, Point parking_info, int cur_idx, Ego_status& next_N_index_pos){
+    int k = path_info.position.size();
+    double min_dist = 100;
+    int index = -1;
+    int step_size = 8000;
+    if(k >0){
+        for(int i = std::max(cur_idx - step_size, 0); i < std::min(k, cur_idx + step_size); ++i) {
+            double dist = sqrt((parking_info.x - path_info.position[i][0])*(parking_info.x - path_info.position[i][0])
+                + (parking_info.y - path_info.position[i][1])*(parking_info.y - path_info.position[i][1]));
+            if(dist < min_dist){
+                index = path_info.position[i][2];
+                min_dist = (dist);
+            }
+        }
+    }
+
+    if(index < (k-1) ){
+        next_N_index_pos.curr.x = path_info.position[index][0];
+        next_N_index_pos.curr.y = path_info.position[index][1];
+    }else{
+        next_N_index_pos.curr.x = path_info.position[k-1][0];
+        next_N_index_pos.curr.y = path_info.position[k-1][1];
+    }  
+}
+
 class Ray_Casting_Algorithm
 {
 private:
@@ -289,14 +322,14 @@ public:
         pcl::KdTreeFLANN<PointType> RPC_kdtree;
         RPC_kdtree.setInputCloud(roi_cloud);
 
-        vector<Polygon> near_ego_parking_zone = get_nearest_N_zone(6,parking_zone,ego_info,1);//가장 가까운 parking zone 4개를 보되 10m이상 떨어진 parking zone에 대해서는 판단하지 않는다.
+        vector<Polygon> near_ego_parking_zone = get_nearest_N_zone(3,parking_zone,ego_info,1);//가장 가까운 parking zone 4개를 보되 10m이상 떨어진 parking zone에 대해서는 판단하지 않는다.
         
         vector<Polygon> parking_available_area;
         if(near_ego_parking_zone.size() > 0){
             for(auto parking_zone : near_ego_parking_zone){
                 bool empty_parkin_zone = true;
 
-                int point_num = 5;
+                int point_num = 100;
                 std::vector<int> indices;
                 std::vector<float> distances;
 

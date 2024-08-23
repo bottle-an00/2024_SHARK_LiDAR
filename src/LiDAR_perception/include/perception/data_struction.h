@@ -176,6 +176,7 @@ int index_finder(path_info path_info, Ego_status ego_info, int& cur_idx, Ego_sta
     return index;
 }
 
+
 pcl::PointCloud<PointType>::Ptr transformPointCloud(pcl::PointCloud<PointType>::Ptr cloudIn, Ego_status& ego_info){
 
     pcl::PointCloud<PointType>::Ptr cloudOut(new pcl::PointCloud<PointType>());
