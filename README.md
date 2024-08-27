@@ -75,7 +75,7 @@ roslaunch LiDAR_perception main.launch
 roslaunch LiDAR_perception gpslam.launch
 ```
 
-*미션 수행을 위한 main 코드의 자세한 설명은 [블로그](https://bottle-an00.tistory.com/) 링크를 참고*
+*미션 수행을 위한 main 코드의 자세한 설명은 [블로그](https://bottle-an00.tistory.com/) 링크를 참고*<br><br>
 ## References
 
 PATCHWORK++ : https://github.com/url-kaist/patchwork-plusplus-ros <br>
