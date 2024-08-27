@@ -40,7 +40,7 @@
   </tr>
 </table>
 
-## DEMO VIDEO
+## Demo Video
 * __예선 연습 주행 영상__
   + 미션 내용<br>
   <img src="https://github.com/user-attachments/assets/663a3f76-47fa-498b-9c10-de281ead29cd" width="900" height="550"></img><br>
@@ -76,7 +76,7 @@ roslaunch LiDAR_perception main.launch
 roslaunch LiDAR_perception gpslam.launch
 ```
 
-*미션 수행을 위한 main 코드의 자세한 설명은 [블로그](https://bottle-an00.tistory.com/) 링크를 참고*<br><br>
+*미션 수행을 위한 main 코드의 자세한 설명은 [블로그](https://bottle-an00.tistory.com/category/%ED%94%8C%EC%A0%9D/SHARK%20%EB%8C%80%ED%9A%8C) 링크를 참고*<br><br>
 ## References
 
 PATCHWORK++ : https://github.com/url-kaist/patchwork-plusplus-ros <br>
