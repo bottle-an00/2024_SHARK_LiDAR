@@ -50,11 +50,32 @@
   <img src="https://github.com/user-attachments/assets/25b9610e-d08a-40bd-908b-687ba823faad" width="900" height="550"></img><br>
   [본선 연습 주행 영상 링크](https://youtu.be/1a13bzOtN-Y)<br><br>
 
-## How to run
+## How to run <br><br>
 ```commandline
-git clone 
+git clone https://github.com/bottle-an00/2024_SHARK_LiDAR.git
+cd 2024_SHARK_LiDAR
+caktin_make
+source devel/setup.bash
+
+...morai 실행
+
+roslaunch rosbridge_server rosbridge_websocket address:=127.0.0.1
 ```
-  
+
+[main 코드 시각화 rviz 실행]
+```commandline
+roslaunch LiDAR_perception rviz.launch
+```
+[main 코드 실행]
+```commandline
+roslaunch LiDAR_perception main.launch
+```
+[PCD MAP 생성]
+```commandline
+roslaunch LiDAR_perception gpslam.launch
+```
+
+*미션 수행을 위한 main 코드의 자세한 설명은 [블로그](https://bottle-an00.tistory.com/) 링크를 참고*
 ## References
 
 PATCHWORK++ : https://github.com/url-kaist/patchwork-plusplus-ros <br>
