@@ -1,4 +1,4 @@
 # 2024_SHARK_LiDAR
 Code for 2024 SHARK contest (LiDAR)
-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
 
+<img src="https://github.com/user-attachments/assets/11b4eeb6-a9a3-4553-976a-b201eeed22be" width="300" height="421">
