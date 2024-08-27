@@ -51,6 +51,7 @@
   [본선 연습 주행 영상 링크](https://youtu.be/1a13bzOtN-Y)<br><br>
 
 ## How to run <br><br>
+[install & build]
 ```commandline
 git clone https://github.com/bottle-an00/2024_SHARK_LiDAR.git
 cd 2024_SHARK_LiDAR
