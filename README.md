@@ -44,12 +44,17 @@
 * __예선 연습 주행 영상__
   + 미션 내용<br>
   <img src="https://github.com/user-attachments/assets/663a3f76-47fa-498b-9c10-de281ead29cd" width="900" height="550"></img><br>
-  링크 : https://youtu.be/yEcutZxK-b8<br><br>
+  [예선 연습 주행 영상 링크](https://youtu.be/yEcutZxK-b8)<br><br>
 * __본선 연습 주행 영상__
   + 미션 내용<br>
   <img src="https://github.com/user-attachments/assets/25b9610e-d08a-40bd-908b-687ba823faad" width="900" height="550"></img><br>
-  링크 : https://youtu.be/1a13bzOtN-Y<br><br>
+  [본선 연습 주행 영상 링크](https://youtu.be/1a13bzOtN-Y)<br><br>
 
+## How to run
+```commandline
+git clone 
+```
+  
 ## References
 
 PATCHWORK++ : https://github.com/url-kaist/patchwork-plusplus-ros <br>
