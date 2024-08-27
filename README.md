@@ -43,7 +43,8 @@
 ## DEMO VIDEO
 * __예선 연습 주행 영상__
   + 미션 내용<br>
-  ![image](https://github.com/user-attachments/assets/663a3f76-47fa-498b-9c10-de281ead29cd)
+  <img src="https://github.com/user-attachments/assets/663a3f76-47fa-498b-9c10-de281ead29cd" width="900" height="550"></img>
+  영상 링크 : https://youtu.be/yEcutZxK-b8
 
 
 ## References
