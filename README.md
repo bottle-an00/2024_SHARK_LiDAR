@@ -63,7 +63,7 @@ source devel/setup.bash
 roslaunch rosbridge_server rosbridge_websocket address:=127.0.0.1
 ```
 
-[main 코드 시각화 rviz 실행]
+[rviz 실행]
 ```commandline
 roslaunch LiDAR_perception rviz.launch
 ```
